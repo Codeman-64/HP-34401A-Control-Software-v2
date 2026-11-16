@@ -2716,14 +2716,21 @@ namespace HP_34401A
         {
             insert_Log("This software was created for HP Agilent Keysight 34401A.", 4);
             insert_Log("You will need a RS232 USB to Serial Adapter and Null Modem Cable/Adapter.", 4);
+            insert_Log("Requires 64-bit Windows 10 (version 22H2) or Windows 11.", 4);
         }
 
         private void Credits_Click(object sender, RoutedEventArgs e)
         {
-            insert_Log("Created by Niravk Patel.", 4);
-            insert_Log("Email: niravkp97@gmail.com", 4);
-            insert_Log("This program was created using C# WPF .Net Framework 4.7.2", 4);
-            insert_Log("Supports Windows 10, 8, 8.1, and 7", 4);
+            insert_Log("HP 34401A Control and Data Logging Software, version 2.0 (November 2026).", 5);
+            insert_Log("Originally created by Nirav Patel (niravkp97@gmail.com), 2021, in C# WPF for .NET Framework 4.7.2.", 4);
+            insert_Log("Version 2 updates by T. Carter (codeman.tcarter@protonmail.com), with Claude (Anthropic's AI assistant):", 4);
+            insert_Log("  - Moved to .NET 10 (long-term support release).", 4);
+            insert_Log("  - RS-232 setup limited to the meter's formats (8N2, 7E2, 7O2, 300-9600 baud).", 4);
+            insert_Log("  - Fixed readings getting out of step after timeouts; automatic reconnect if the USB adapter drops out.", 4);
+            insert_Log("  - Meter is returned to front-panel (local) control when the app closes.", 4);
+            insert_Log("  - Meter error checking, faster commands, millisecond timestamps, longer output log.", 4);
+            insert_Log("  - Meter Tools: Null, dB, dBm, limit test and burst capture; last settings restored on connect.", 4);
+            insert_Log("Runs on 64-bit Windows 10 (version 22H2) and Windows 11. Windows 7, 8 and 8.1 are no longer supported.", 4);
         }
 
         //-----------------------------------------------------------------------

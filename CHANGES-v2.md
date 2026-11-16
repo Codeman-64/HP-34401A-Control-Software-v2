@@ -141,3 +141,15 @@ Run these in this folder (Developer PowerShell in Visual Studio, or Git Bash):
 
     git fetch v2-stage3e.bundle main
     git reset FETCH_HEAD
+
+# Version 2.0 credits
+
+- About -> Credits now shows version 2.0, the original author (Nirav Patel), the version 2
+  updates by T. Carter with Claude, the main changes, and the supported Windows versions
+  (64-bit Windows 10 22H2 and Windows 11). About -> Device Support lists the Windows requirement.
+- Program version set to 2.0.0.0 (exe Properties -> Details).
+
+## Updating the git history (once)
+
+    git fetch v2-credits.bundle main
+    git reset FETCH_HEAD

@@ -10,9 +10,9 @@ using System.Windows;
 [assembly: AssemblyTitle("HP 34401A")]
 [assembly: AssemblyDescription("Control and Data Logging Software")]
 [assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("Nirav Patel, niravkp97@gmail.com")]
-[assembly: AssemblyProduct("HP 34401A Software by Nirav Patel")]
-[assembly: AssemblyCopyright("Copyright ©  2021")]
+[assembly: AssemblyCompany("Nirav Patel (original); T. Carter (version 2)")]
+[assembly: AssemblyProduct("HP 34401A Software by Nirav Patel, version 2 by T. Carter")]
+[assembly: AssemblyCopyright("Copyright © 2021 Nirav Patel; version 2 changes © 2026 T. Carter")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 
@@ -55,5 +55,5 @@ using System.Windows;
 // You can specify all the values or you can default the Build and Revision Numbers
 // by using the '*' as shown below:
 // [assembly: AssemblyVersion("1.0.*")]
-[assembly: AssemblyVersion("1.0.0.0")]
-[assembly: AssemblyFileVersion("1.0.0.0")]
+[assembly: AssemblyVersion("2.0.0.0")]
+[assembly: AssemblyFileVersion("2.0.0.0")]
