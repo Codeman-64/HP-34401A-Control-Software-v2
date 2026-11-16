@@ -1228,7 +1228,10 @@ namespace HP_34401A
         {
             try
             {
-                Thread.Sleep(250);
+                //If part of a command was lost, the rest is still waiting in the meter's input and would be
+                //joined to the next command. An empty line ends it (the meter may log a syntax error for it).
+                HP34401A.WriteLine("");
+                Thread.Sleep(Math.Max(250, (int)Math.Min(5000, Last_Read_Ms + 150)));
                 HP34401A.DiscardInBuffer();
             }
             catch (Exception)
@@ -1370,6 +1373,7 @@ namespace HP_34401A
                 Wait_Meter_Busy();
                 Meter_Write("READ?");
                 string first = Meter_ReadLine().Trim();
+                Meter_Math_On = true;
                 insert_Log("Meter math enabled; first reading " + first + " taken as reference where needed.", 3);
                 return;
             }
@@ -1393,6 +1397,7 @@ namespace HP_34401A
                     Interlocked.Exchange(ref resetMinMaxAvg, 1);
                     Math_Off_By_Function_Change();
                     Meter_Write(Command);
+                    Meter_Math_On = false; //CONFigure turns the meter's math off
                     break;
                 case "TRIGger:DELay?":
                     Meter_Write(Command);
@@ -1709,13 +1714,19 @@ namespace HP_34401A
                     }
                     break;
                 default:
+                    //While the meter's math is on, any math command (function, offset, reference, limits, state)
+                    //makes it take a reading, during which it ignores serial input. Decide on the meter's actual
+                    //state (Meter_Math_On, data thread), not on the window's setting, which may already have changed.
+                    bool isCalc = Command.StartsWith("CALC", StringComparison.OrdinalIgnoreCase);
+                    bool mathWasOn = Meter_Math_On;
                     Meter_Write(Command);
-                    //With math on, changing a math setting (offset, reference, limits) makes the meter take
-                    //a reading, during which it ignores serial input.
-                    if (Math_Mode != Meter_Math.Off && Command.StartsWith("CALC", StringComparison.OrdinalIgnoreCase) &&
-                        !Command.StartsWith("CALCulate:FUNCtion", StringComparison.OrdinalIgnoreCase))
+                    if (isCalc && mathWasOn)
                     {
                         Wait_Meter_Busy();
+                    }
+                    if (Command.Equals("CALCulate:STATe OFF", StringComparison.OrdinalIgnoreCase))
+                    {
+                        Meter_Math_On = false;
                     }
                     break;
             }

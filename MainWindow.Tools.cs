@@ -70,16 +70,30 @@ namespace HP_34401A
         //True once the meter's DTR (our DSR) has been seen asserted, i.e. the cable carries the handshake line.
         bool Dsr_Wired = false;
 
+        //The meter's actual math state as last commanded on the data thread (Math_Mode is the window's setting).
+        volatile bool Meter_Math_On = false;
+
         //The meter ignores serial input while it is taking a reading triggered by a setting change.
         //Wait about one reading time (plus margin), and for its ready line if the cable has it.
         private void Wait_Meter_Busy()
         {
             int ms = (int)Math.Min(10000, Math.Max(200, Last_Read_Ms + 150));
+            //Watch the meter's ready line meanwhile, to learn whether the cable carries it.
+            Stopwatch w = Stopwatch.StartNew();
+            int checks = 0, low = 0;
+            while (w.ElapsedMilliseconds < ms)
+            {
+                checks++;
+                if (!HP34401A.DsrHolding)
+                {
+                    low++;
+                }
+                Thread.Sleep(1);
+            }
             if (Trace_Serial)
             {
-                insert_Log("   waiting " + ms + " ms for the meter to finish its reading", 4);
+                insert_Log("   waited " + ms + " ms for the meter to finish its reading (DSR low in " + low + " of " + checks + " checks)", 4);
             }
-            Thread.Sleep(ms);
         }
 
         private void Meter_Write(string command)

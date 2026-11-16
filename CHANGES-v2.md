@@ -125,3 +125,19 @@ Run these in this folder (Developer PowerShell in Visual Studio, or Git Bash):
 
     git fetch v2-stage3d.bundle main
     git reset FETCH_HEAD
+
+# Stage 3e fix
+
+- The wait after math commands now depends on the meter's actual math state (tracked on the
+  communication thread), not on the Meter Tools setting, which can change while commands are
+  still being sent. It applies to every math command while math is on, including
+  `CALC:FUNC` and `CALC:STAT OFF`.
+- After any timeout an empty line is sent, so a partly received command can't be joined to
+  the next one (which made `CALC:STAT OFF` fail and math stay on).
+- Traffic log shows how often DSR was low during each wait (tells whether the cable carries the
+  meter's busy line).
+
+## Updating the git history after stage 3e (once)
+
+    git fetch v2-stage3e.bundle main
+    git reset FETCH_HEAD
