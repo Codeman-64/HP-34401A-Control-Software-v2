@@ -37,12 +37,24 @@ namespace HP_34401A
         }
 
         private readonly List<Readout_Part> Readout_Parts = new List<Readout_Part>();
+
+        //The segment font has no space above its characters (the standard font has about a quarter of its
+        //size), so in VFD mode the readouts are moved to sit where the standard text sat.
+        private const double VFD_Main_Size = 64, VFD_Small_Size = 15;
+        private const double VFD_Main_Top = 6;    //centres the 64 px reading in the 75 px top row
+        private const double VFD_Small_Top = 4;   //lines the MIN/MAX/AVG values up with the MIN:/MAX:/AVG: labels
+        private Viewbox Main_Readout_Box;
+        private Thickness Main_Box_Standard_Margin;
+        private double Main_Box_Standard_Height;
         private string Display_Font = Font_Standard;
         private bool Translating_Units = false;
 
         //Called once from the constructor: puts a "ghost" text behind each readout label.
         private void Setup_VFD_Display()
         {
+            Main_Readout_Box = (Viewbox)((StackPanel)Measurement_Value.Parent).Parent;
+            Main_Box_Standard_Margin = Main_Readout_Box.Margin;
+            Main_Box_Standard_Height = Main_Readout_Box.Height;
             Add_Readout(Measurement_Value, true, false, false);
             Add_Readout(Measurement_Scale, true, false, true);
             Add_Readout(Measurement_Type, true, true, false);
@@ -180,7 +192,7 @@ namespace HP_34401A
                 {
                     part.Label.FontFamily = VFD_Font;
                     part.Label.FontWeight = bold ? FontWeights.Bold : FontWeights.Normal;
-                    part.Label.FontSize = part.IsMain ? 64 : 15;
+                    part.Label.FontSize = part.IsMain ? VFD_Main_Size : VFD_Small_Size;
                     part.Ghost.FontFamily = VFD_Font;
                     part.Ghost.FontWeight = part.Label.FontWeight;
                     part.Ghost.FontSize = part.Label.FontSize;
@@ -188,6 +200,11 @@ namespace HP_34401A
                     part.Ghost.Visibility = Visibility.Visible;
                     Color colour = (part.Label.Foreground as SolidColorBrush)?.Color ?? Colors.Cyan;
                     part.Label.Effect = new DropShadowEffect { ShadowDepth = 0, BlurRadius = part.IsMain ? 14 : 6, Opacity = 0.7, Color = colour };
+                    if (!part.IsMain)
+                    {
+                        Thickness m = part.StandardMargin;
+                        ((Grid)part.Label.Parent).Margin = new Thickness(m.Left, m.Top + VFD_Small_Top, m.Right, m.Bottom);
+                    }
                 }
                 else
                 {
@@ -196,8 +213,21 @@ namespace HP_34401A
                     part.Label.FontSize = part.StandardSize;
                     part.Ghost.Visibility = Visibility.Collapsed;
                     part.Label.Effect = null;
+                    ((Grid)part.Label.Parent).Margin = part.StandardMargin;
                 }
                 Readout_Changed(part); //re-spell units and refresh the ghost
+            }
+
+            //Main reading: no negative top offset for the segment font; a box just as tall as the text.
+            if (VFD_On)
+            {
+                Main_Readout_Box.Margin = new Thickness(Main_Box_Standard_Margin.Left, VFD_Main_Top, Main_Box_Standard_Margin.Right, 0);
+                Main_Readout_Box.Height = VFD_Main_Size;
+            }
+            else
+            {
+                Main_Readout_Box.Margin = Main_Box_Standard_Margin;
+                Main_Readout_Box.Height = Main_Box_Standard_Height;
             }
 
             //Switch to the VFD colour (and back) only when the display still has the default colour.
