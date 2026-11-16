@@ -53,47 +53,34 @@
                 <Label Content="COM Port Number:" Margin="0,0,0,0" Grid.Column="0" Grid.Row="1" HorizontalContentAlignment="Right"/>
                 <TextBox x:Name="COM_Port" Margin="0,0,0,2" TextWrapping="Wrap" VerticalContentAlignment="Center" FontSize="14" Text="COM22" Grid.Column="1" Grid.Row="1"/>
                 <Label Content="Bits per second:" Margin="0,0,0,0" Grid.Column="0" Grid.Row="2" HorizontalContentAlignment="Right"/>
-                <ComboBox x:Name="COM_Bits" Margin="0,0,0,2" FontSize="14" VerticalContentAlignment="Center" Grid.Column="1" Grid.Row="2">
-                    <ComboBoxItem Content="300" IsSelected="False" IsEnabled="True"/>
-                    <ComboBoxItem Content="600" IsSelected="False" IsEnabled="True"/>
-                    <ComboBoxItem Content="1200" IsSelected="False" IsEnabled="True"/>
-                    <ComboBoxItem Content="2400" IsSelected="False" IsEnabled="True"/>
-                    <ComboBoxItem Content="4800" IsSelected="False" IsEnabled="True"/>
-                    <ComboBoxItem Content="9600" IsSelected="True" IsEnabled="True"/>
-                    <ComboBoxItem Content="14400" IsSelected="False" IsEnabled="True"/>
-                    <ComboBoxItem Content="19200" IsSelected="False" IsEnabled="True"/>
-                    <ComboBoxItem Content="38400" IsSelected="False" IsEnabled="True"/>
-                    <ComboBoxItem Content="57600" IsSelected="False" IsEnabled="True"/>
-                    <ComboBoxItem Content="115200" IsSelected="False" IsEnabled="True"/>
-                    <ComboBoxItem Content="128000" IsSelected="False" IsEnabled="True"/>
+                <ComboBox x:Name="COM_Bits" Margin="0,0,0,2" FontSize="14" VerticalContentAlignment="Center" Grid.Column="1" Grid.Row="2"
+                          ToolTip="Must match the meter's I/O menu (BAUD RATE). The 34401A supports 300 to 9600.">
+                    <ComboBoxItem Content="300"/>
+                    <ComboBoxItem Content="600"/>
+                    <ComboBoxItem Content="1200"/>
+                    <ComboBoxItem Content="2400"/>
+                    <ComboBoxItem Content="4800"/>
+                    <ComboBoxItem Content="9600" IsSelected="True"/>
                 </ComboBox>
-                <Label Content="Data bits:" Margin="0,0,0,0" Grid.Column="0" Grid.Row="3" HorizontalContentAlignment="Right"/>
-                <ComboBox x:Name="COM_DataBits" Margin="0,0,0,2" FontSize="14" VerticalContentAlignment="Center" Grid.Column="1" Grid.Row="3">
-                    <ComboBoxItem Content="4" IsSelected="False" IsEnabled="True"/>
-                    <ComboBoxItem Content="5" IsSelected="False" IsEnabled="True"/>
-                    <ComboBoxItem Content="6" IsSelected="False" IsEnabled="True"/>
-                    <ComboBoxItem Content="7" IsSelected="False" IsEnabled="True"/>
-                    <ComboBoxItem Content="8" IsSelected="True" IsEnabled="True"/>
+                <Label Content="Parity:" Margin="0,0,0,0" Grid.Column="0" Grid.Row="3" HorizontalContentAlignment="Right"/>
+                <ComboBox x:Name="COM_Parity" Margin="0,0,0,2" FontSize="14" VerticalContentAlignment="Center" Grid.Column="1" Grid.Row="3"
+                          SelectionChanged="COM_Parity_SelectionChanged"
+                          ToolTip="Must match the meter's I/O menu (PARITY). None = 8 data bits, Even/Odd = 7 data bits.">
+                    <ComboBoxItem Content="None" IsSelected="True"/>
+                    <ComboBoxItem Content="Even"/>
+                    <ComboBoxItem Content="Odd"/>
                 </ComboBox>
-                <Label Content="Parity:" Margin="0,0,0,0" Grid.Column="0" Grid.Row="4" HorizontalContentAlignment="Right"/>
-                <ComboBox x:Name="COM_Parity" Margin="0,0,0,2" FontSize="14" VerticalContentAlignment="Center" Grid.Column="1" Grid.Row="4">
-                    <ComboBoxItem Content="Even" IsSelected="False" IsEnabled="True"/>
-                    <ComboBoxItem Content="Odd" IsSelected="False" IsEnabled="True"/>
-                    <ComboBoxItem Content="None" IsSelected="True" IsEnabled="True"/>
-                    <ComboBoxItem Content="Mark" IsSelected="False" IsEnabled="True"/>
-                    <ComboBoxItem Content="Space" IsSelected="False" IsEnabled="True"/>
-                </ComboBox>
+                <Label Content="Data bits:" Margin="0,0,0,0" Grid.Column="0" Grid.Row="4" HorizontalContentAlignment="Right"/>
+                <TextBlock x:Name="COM_DataBits_Display" Text="8" FontSize="14" VerticalAlignment="Center" Margin="4,0,0,2" Grid.Column="1" Grid.Row="4"
+                           Foreground="DimGray" ToolTip="Set automatically from Parity (34401A: None = 8, Even/Odd = 7)."/>
                 <Label Content="Stop bits:" Margin="0,0,0,0" Grid.Column="0" Grid.Row="5" HorizontalContentAlignment="Right"/>
-                <ComboBox x:Name="COM_Stop" Margin="0,0,0,2" FontSize="14" VerticalContentAlignment="Center" Grid.Column="1" Grid.Row="5">
-                    <ComboBoxItem Content="1" IsSelected="True" IsEnabled="True"/>
-                    <ComboBoxItem Content="1.5" IsSelected="False" IsEnabled="True"/>
-                    <ComboBoxItem Content="2" IsSelected="False" IsEnabled="True"/>
-                </ComboBox>
+                <TextBlock x:Name="COM_Stop_Display" Text="2" FontSize="14" VerticalAlignment="Center" Margin="4,0,0,2" Grid.Column="1" Grid.Row="5"
+                           Foreground="DimGray" ToolTip="The 34401A always uses 2 stop bits on RS-232."/>
                 <Label Content="Flow control:"  Margin="0,0,0,0" Grid.Column="0" Grid.Row="6" HorizontalContentAlignment="Right"/>
                 <ComboBox x:Name="COM_Flow" Margin="0,0,0,2" FontSize="14" VerticalContentAlignment="Center" Grid.Column="1" Grid.Row="6">
-                    <ComboBoxItem Content="Xon/Xoff" IsSelected="False" IsEnabled="True"/>
-                    <ComboBoxItem Content="Hardware" IsSelected="False" IsEnabled="True"/>
-                    <ComboBoxItem Content="None" IsSelected="True" IsEnabled="True"/>
+                    <ComboBoxItem Content="None" IsSelected="True"/>
+                    <ComboBoxItem Content="Hardware"/>
+                    <ComboBoxItem Content="Xon/Xoff"/>
                 </ComboBox>
                 <Label Content="Write Timeout: "  Margin="0,0,0,0" Grid.Column="0" Grid.Row="7" HorizontalContentAlignment="Right"/>
                 <TextBox x:Name="COM_write_timeout" Margin="0,0,0,2" TextWrapping="Wrap" FontSize="14" Text="3000" Grid.Column="1" Grid.Row="7"/>

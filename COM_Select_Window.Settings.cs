@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.IO;
 using System.Text.Json;
 using System.Windows.Controls;
@@ -15,7 +15,7 @@ namespace HP_34401A
         public string BaudRate { get; set; } = "9600";
         public string DataBits { get; set; } = "8";
         public string Parity { get; set; } = "None";
-        public string StopBits { get; set; } = "1";
+        public string StopBits { get; set; } = "2";
         public string FlowControl { get; set; } = "None";
         public string WriteTimeout { get; set; } = "3000";
         public string ReadTimeout { get; set; } = "9000";
@@ -46,10 +46,28 @@ namespace HP_34401A
                 }
 
                 COM_Port.Text = s.PortName;
-                Select_ComboBox_Item(COM_Bits, s.BaudRate);
-                Select_ComboBox_Item(COM_DataBits, s.DataBits);
-                Select_ComboBox_Item(COM_Parity, s.Parity);
-                Select_ComboBox_Item(COM_Stop, s.StopBits);
+
+                //Older versions allowed frames the 34401A can't use (e.g. 8N1, 19200 baud, Mark parity).
+                //Map them onto what the meter supports: 300-9600 baud, 8N2 / 7E2 / 7O2.
+                bool migrated = false;
+                if (!Select_ComboBox_Item(COM_Bits, s.BaudRate))
+                {
+                    Select_ComboBox_Item(COM_Bits, "9600");
+                    migrated = true;
+                }
+                if (!Select_ComboBox_Item(COM_Parity, s.Parity))
+                {
+                    Select_ComboBox_Item(COM_Parity, "None");
+                    migrated = true;
+                }
+                if (s.StopBits != "2")
+                {
+                    migrated = true;
+                }
+                if (migrated)
+                {
+                    insert_Log("Saved COM settings were updated to a frame the 34401A supports (2 stop bits; None = 8 data bits, Even/Odd = 7). Check they match the meter's I/O menu.", Warning_Code);
+                }
                 Select_ComboBox_Item(COM_Flow, s.FlowControl);
                 COM_write_timeout.Text = s.WriteTimeout;
                 COM_read_timeout.Text = s.ReadTimeout;
@@ -78,9 +96,9 @@ namespace HP_34401A
                 {
                     PortName = COM_Port.Text.ToUpper().Trim(),
                     BaudRate = Get_ComboBox_Text(COM_Bits),
-                    DataBits = Get_ComboBox_Text(COM_DataBits),
+                    DataBits = COM_DataBits_Value.ToString(),
                     Parity = Get_ComboBox_Text(COM_Parity),
-                    StopBits = Get_ComboBox_Text(COM_Stop),
+                    StopBits = "2",
                     FlowControl = Get_ComboBox_Text(COM_Flow),
                     WriteTimeout = COM_write_timeout.Text.Trim(),
                     ReadTimeout = COM_read_timeout.Text.Trim(),
@@ -103,20 +121,21 @@ namespace HP_34401A
             return (box.SelectedItem as ComboBoxItem)?.Content?.ToString() ?? "";
         }
 
-        private static void Select_ComboBox_Item(ComboBox box, string value)
+        private static bool Select_ComboBox_Item(ComboBox box, string value)
         {
             if (string.IsNullOrEmpty(value))
             {
-                return;
+                return false;
             }
             foreach (object item in box.Items)
             {
                 if (item is ComboBoxItem cbi && cbi.Content?.ToString() == value)
                 {
                     box.SelectedItem = cbi;
-                    return;
+                    return true;
                 }
             }
+            return false;
         }
     }
 }

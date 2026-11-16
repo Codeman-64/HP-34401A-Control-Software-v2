@@ -39,8 +39,8 @@ namespace HP_34401A
         string COM_Port_Name = "";
         int COM_BaudRate_Value = 9600;
         int COM_Parity_Value = 0;
-        int COM_StopBits_Value = 1;
-        int COM_DataBits_Value = 8;
+        int COM_StopBits_Value = 2; //34401A: always 2 stop bits (StopBits.Two)
+        int COM_DataBits_Value = 8; //34401A: 8 with no parity, 7 with even/odd
         int COM_Handshake_Value = 0;
         int COM_WriteTimeout_Value = 3000;
         int COM_ReadTimeout_Value = 9000;
@@ -92,12 +92,16 @@ namespace HP_34401A
         private bool COM_Config_Updater()
         {
             COM_Port_Name = COM_Port.Text.ToUpper().Trim();
+            if (COM_Port_Name.Length == 0)
+            {
+                insert_Log("Enter or double-click a COM port first.", Error_Code);
+                return false;
+            }
 
-            string BaudRate = COM_Bits.SelectedItem.ToString().Split(new string[] { ": " }, StringSplitOptions.None).Last();
-            COM_BaudRate_Value = Int32.Parse(BaudRate);
-
-            string DataBits = COM_DataBits.SelectedItem.ToString().Split(new string[] { ": " }, StringSplitOptions.None).Last();
-            COM_DataBits_Value = Int32.Parse(DataBits);
+            if (!int.TryParse(Get_ComboBox_Text(COM_Bits), out COM_BaudRate_Value))
+            {
+                COM_BaudRate_Value = 9600;
+            }
 
             bool isNum = int.TryParse(COM_write_timeout.Text.Trim(), out int Value);
             if (isNum == true & Value > 0)
@@ -107,7 +111,7 @@ namespace HP_34401A
             }
             else
             {
-                COM_write_timeout.Text = "1000";
+                COM_write_timeout.Text = "3000";
                 insert_Log("Write Timeout must be a positive integer.", Error_Code);
                 return false;
             }
@@ -120,97 +124,74 @@ namespace HP_34401A
             }
             else
             {
-                COM_read_timeout.Text = "1000";
+                COM_read_timeout.Text = "9000";
                 insert_Log("Read Timeout must be a positive integer.", Error_Code);
                 return false;
             }
 
-            string Parity = COM_Parity.SelectedItem.ToString().Split(new string[] { ": " }, StringSplitOptions.None).Last();
-            switch (Parity)
+            //The 34401A supports exactly three RS-232 frames: 8N2, 7E2 and 7O2.
+            switch (Get_ComboBox_Text(COM_Parity))
             {
                 case "Even":
-                    COM_Parity_Value = 2;
+                    COM_Parity_Value = (int)System.IO.Ports.Parity.Even;
+                    COM_DataBits_Value = 7;
                     break;
                 case "Odd":
-                    COM_Parity_Value = 1;
-                    break;
-                case "None":
-                    COM_Parity_Value = 0;
-                    break;
-                case "Mark":
-                    COM_Parity_Value = 3;
-                    break;
-                case "Space":
-                    COM_Parity_Value = 4;
+                    COM_Parity_Value = (int)System.IO.Ports.Parity.Odd;
+                    COM_DataBits_Value = 7;
                     break;
                 default:
-                    COM_Parity_Value = 0;
+                    COM_Parity_Value = (int)System.IO.Ports.Parity.None;
+                    COM_DataBits_Value = 8;
                     break;
             }
+            COM_StopBits_Value = (int)System.IO.Ports.StopBits.Two;
 
-            string StopBits = COM_Stop.SelectedItem.ToString().Split(new string[] { ": " }, StringSplitOptions.None).Last();
-            switch (StopBits)
-            {
-                case "1":
-                    COM_StopBits_Value = 1;
-                    break;
-                case "1.5":
-                    COM_StopBits_Value = 3;
-                    break;
-                case "2":
-                    COM_StopBits_Value = 2;
-                    break;
-                default:
-                    COM_StopBits_Value = 1;
-                    break;
-            }
-
-            string Flow = COM_Flow.SelectedItem.ToString().Split(new string[] { ": " }, StringSplitOptions.None).Last();
-            switch (Flow)
+            switch (Get_ComboBox_Text(COM_Flow))
             {
                 case "Xon/Xoff":
-                    COM_Handshake_Value = 1;
+                    COM_Handshake_Value = (int)Handshake.XOnXOff;
                     break;
                 case "Hardware":
-                    COM_Handshake_Value = 2;
-                    break;
-                case "None":
-                    COM_Handshake_Value = 0;
+                    COM_Handshake_Value = (int)Handshake.RequestToSend;
                     break;
                 default:
-                    COM_Handshake_Value = 1;
+                    COM_Handshake_Value = (int)Handshake.None;
                     break;
             }
 
-            string rts = COM_rtsEnable.SelectedItem.ToString().Split(new string[] { ": " }, StringSplitOptions.None).Last();
-            switch (rts)
-            {
-                case "True":
-                    COM_RtsEnable = true;
-                    break;
-                case "False":
-                    COM_RtsEnable = false;
-                    break;
-                default:
-                    COM_RtsEnable = true;
-                    break;
-            }
-
-            string dtr = COM_dtrEnable.SelectedItem.ToString().Split(new string[] { ": " }, StringSplitOptions.None).Last();
-            switch (dtr)
-            {
-                case "True":
-                    COM_DtrEnable = true;
-                    break;
-                case "False":
-                    COM_DtrEnable = false;
-                    break;
-                default:
-                    COM_DtrEnable = true;
-                    break;
-            }
+            COM_RtsEnable = Get_ComboBox_Text(COM_rtsEnable) != "False";
+            COM_DtrEnable = Get_ComboBox_Text(COM_dtrEnable) != "False";
 
             return true;
+        }
+
+        private void COM_Parity_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if (COM_DataBits_Display != null)
+            {
+                COM_DataBits_Display.Text = Get_ComboBox_Text(COM_Parity) == "None" ? "8" : "7";
+            }
+        }
+
+        private string Frame_Description()
+        {
+            string parity = COM_Parity_Value == (int)System.IO.Ports.Parity.Even ? "E" : COM_Parity_Value == (int)System.IO.Ports.Parity.Odd ? "O" : "N";
+            return COM_BaudRate_Value + " baud, " + COM_DataBits_Value + parity + "2";
+        }
+
+        //Creates a SerialPort with the current (validated) settings. Caller opens and disposes it.
+        private SerialPort Create_Configured_Port()
+        {
+            return new SerialPort(COM_Port_Name, COM_BaudRate_Value, (Parity)COM_Parity_Value, COM_DataBits_Value, (StopBits)COM_StopBits_Value)
+            {
+                WriteTimeout = COM_WriteTimeout_Value,
+                ReadTimeout = COM_ReadTimeout_Value,
+                RtsEnable = COM_RtsEnable,
+                DtrEnable = COM_DtrEnable,
+                Handshake = (Handshake)COM_Handshake_Value,
+                NewLine = "\n"
+            };
         }
 
         private void insert_Log(string Message, int Code)
@@ -310,9 +291,8 @@ namespace HP_34401A
             }
             catch (Exception Ex)
             {
+                insert_Log(COM_Port.Text + " could not be opened: " + Ex.Message, Error_Code);
                 COM_Port.Text = string.Empty;
-                insert_Log(Ex.ToString(), Error_Code);
-                insert_Log(COM_Port.Text + " is closed. Probably being used by a software.", Error_Code);
                 insert_Log("Try another COM Port or check if COM is already used by another software.", Message_Code);
                 return false;
             }
@@ -323,50 +303,49 @@ namespace HP_34401A
         {
             try
             {
-                using (var serial = new SerialPort(COM_Port_Name, COM_BaudRate_Value, (Parity)COM_Parity_Value, COM_DataBits_Value, (StopBits)COM_StopBits_Value))
+                using (var serial = Create_Configured_Port())
                 {
-                    serial.WriteTimeout = COM_WriteTimeout_Value;
-                    serial.ReadTimeout = COM_ReadTimeout_Value;
-                    serial.RtsEnable = COM_RtsEnable;
-                    serial.DtrEnable = COM_DtrEnable;
-                    serial.Handshake = (Handshake)COM_Handshake_Value;
                     serial.Open();
                     System.Threading.Thread.Sleep(100);
                     serial.Close();
                     return true;
                 }
             }
-            catch (Exception)
+            catch (Exception Ex)
             {
-                COM_Port.Text = string.Empty;
-                insert_Log(COM_Port.Text + " is closed. Probably being used by a software.", Error_Code);
-                insert_Log("Try another COM Port or check if com is already used by another software.", Message_Code);
+                insert_Log(COM_Port_Name + " could not be opened: " + Ex.Message, Error_Code);
+                insert_Log("Try another COM Port or check if the COM port is already used by another program.", Message_Code);
+                return false;
             }
-            return true;
         }
 
         private (bool, string) Serial_Query_HP34401A(string command)
         {
             try
             {
-                COM_Config_Updater();
-                using (var serial = new SerialPort(COM_Port_Name, COM_BaudRate_Value, (Parity)COM_Parity_Value, COM_DataBits_Value, (StopBits)COM_StopBits_Value))
+                if (!COM_Config_Updater())
                 {
-                    serial.WriteTimeout = COM_WriteTimeout_Value;
-                    serial.ReadTimeout = COM_ReadTimeout_Value;
-                    serial.RtsEnable = COM_RtsEnable;
-                    serial.DtrEnable = COM_DtrEnable;
-                    serial.Handshake = (Handshake)COM_Handshake_Value;
+                    return (false, "");
+                }
+                using (var serial = Create_Configured_Port())
+                {
                     serial.Open();
+                    serial.DiscardInBuffer();
                     serial.WriteLine(command);
-                    string data = serial.ReadLine();
+                    string data = serial.ReadLine().Trim();
                     serial.Close();
                     return (true, data);
                 }
             }
-            catch (Exception)
+            catch (TimeoutException)
             {
-                insert_Log("Serial Query Failed, check COM settings or connection.", Error_Code);
+                insert_Log("No reply from the meter within " + COM_ReadTimeout_Value + " ms (" + Frame_Description() + ").", Error_Code);
+                insert_Log("Check the cable (null modem) and that baud and parity match the meter's I/O menu.", Message_Code);
+                return (false, "");
+            }
+            catch (Exception Ex)
+            {
+                insert_Log("Serial query failed: " + Ex.Message, Error_Code);
                 return (false, "");
             }
         }
@@ -375,23 +354,22 @@ namespace HP_34401A
         {
             try
             {
-                COM_Config_Updater();
-                using (var serial = new SerialPort(COM_Port_Name, COM_BaudRate_Value, (Parity)COM_Parity_Value, COM_DataBits_Value, (StopBits)COM_StopBits_Value))
+                if (!COM_Config_Updater())
                 {
-                    serial.WriteTimeout = COM_WriteTimeout_Value;
-                    serial.ReadTimeout = COM_ReadTimeout_Value;
-                    serial.RtsEnable = COM_RtsEnable;
-                    serial.DtrEnable = COM_DtrEnable;
-                    serial.Handshake = (Handshake)COM_Handshake_Value;
+                    return false;
+                }
+                using (var serial = Create_Configured_Port())
+                {
                     serial.Open();
                     serial.WriteLine(command);
+                    System.Threading.Thread.Sleep(50); //let the bytes leave the UART before closing
                     serial.Close();
                     return true;
                 }
             }
-            catch (Exception)
+            catch (Exception Ex)
             {
-                insert_Log("Serial Write Failed, check COM settings or connection.", Error_Code);
+                insert_Log("Serial write failed: " + Ex.Message, Error_Code);
                 return false;
             }
         }
@@ -445,34 +423,17 @@ namespace HP_34401A
 
         private bool Connect_verify_34401A()
         {
-            try
+            (bool check, string data) = Serial_Query_HP34401A("*IDN?");
+            if (check && data.Contains("34401A"))
             {
-                using (var serial = new SerialPort(COM_Port_Name, COM_BaudRate_Value, (Parity)COM_Parity_Value, COM_DataBits_Value, (StopBits)COM_StopBits_Value))
-                {
-                    serial.WriteTimeout = COM_WriteTimeout_Value;
-                    serial.ReadTimeout = COM_ReadTimeout_Value;
-                    serial.RtsEnable = COM_RtsEnable;
-                    serial.DtrEnable = COM_DtrEnable;
-                    serial.Handshake = (Handshake)COM_Handshake_Value;
-                    serial.Open();
-                    serial.WriteLine("*IDN?");
-                    string data = serial.ReadLine();
-                    serial.Close();
-                    if (data.Contains("34401A") == true)
-                    {
-                        return true;
-                    }
-                    else
-                    {
-                        return false;
-                    }
-                }
+                insert_Log(data, Success_Code);
+                return true;
             }
-            catch (Exception)
+            if (check)
             {
-                insert_Log("Serial Query Failed, check COM settings or connection.", Error_Code);
-                return false;
+                insert_Log("Unexpected *IDN? reply: " + data, Error_Code);
             }
+            return false;
         }
 
         private void Connect_Click(object sender, RoutedEventArgs e)
@@ -495,9 +456,10 @@ namespace HP_34401A
                     {
                         if (Connect_verify_34401A() == true)
                         {
-                            if (Serial_Write("*RST") == true)
+                            if (Serial_Write("SYSTem:REMote") == true)
                             {
-                                Serial_Write("SYSTem:REMote");
+                                Serial_Write("*RST");
+                                insert_Log("Connected at " + Frame_Description() + ".", Success_Code);
                                 Data_Updater();
                                 insert_Log("Please wait....connecting soon", Success_Code);
                                 Save_COM_Settings();
