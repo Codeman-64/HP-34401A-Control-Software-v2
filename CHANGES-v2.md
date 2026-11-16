@@ -178,15 +178,11 @@ Run these in this folder (Developer PowerShell in Visual Studio, or Git Bash):
 - Font: "HP34401A VFD" (Fonts folder), a modified DSEG14 Classic v0.46 by keshikan with
   half-height lowercase m and u, in Light, Regular and Bold. MIN/MAX/AVG use 13 px segment text
   so they match the height of their labels. Characters are narrowed to 85 % of their width
-  (VFD_Char_Width in MainWindow.VfdDisplay.cs). SIL Open Font License 1.1; see Fonts\OFL-LICENSE.txt.
+  (VFD_Char_Width in MainWindow.VfdDisplay.cs), with a 5 px gap after MIN:/MAX:/AVG:. SIL Open Font License 1.1; see Fonts\OFL-LICENSE.txt.
 
 ## Updating the git history (once)
 
-    git fetch v2-vfd.bundle main
+    git fetch v2-all.bundle main
     git reset FETCH_HEAD
-    git fetch v2-vfd2.bundle main
-    git reset FETCH_HEAD
-    git fetch v2-vfd3.bundle main
-    git reset FETCH_HEAD
-    git fetch v2-vfd4.bundle main
-    git reset FETCH_HEAD
+
+  (v2-all.bundle holds the complete history, so it works whichever bundles were applied before.)

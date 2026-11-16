@@ -45,6 +45,7 @@ namespace HP_34401A
         private const double VFD_Main_Top = 6;    //centres the 64 px reading in the 75 px top row
         private const double VFD_Small_Top = 6;   //puts the MIN/MAX/AVG values on the same baseline as their labels
         private const double VFD_Char_Width = 0.85; //character width (1.0 = as designed); the meter's characters are a little narrower
+        private const double VFD_Small_Gap = 5;   //space between "MIN:" (etc.) and the segment value
         private Viewbox Main_Readout_Box;
         private Thickness Main_Box_Standard_Margin;
         private double Main_Box_Standard_Height;
@@ -207,7 +208,8 @@ namespace HP_34401A
                     if (!part.IsMain)
                     {
                         Thickness m = part.StandardMargin;
-                        vfdCell.Margin = new Thickness(m.Left, m.Top + VFD_Small_Top, m.Right, m.Bottom);
+                        bool isValue = !part.IsUnit && !part.IsScale;
+                        vfdCell.Margin = new Thickness(m.Left + (isValue ? VFD_Small_Gap : 0), m.Top + VFD_Small_Top, m.Right, m.Bottom);
                     }
                 }
                 else
