@@ -153,3 +153,17 @@ Run these in this folder (Developer PowerShell in Visual Studio, or Git Bash):
 
     git fetch v2-credits.bundle main
     git reset FETCH_HEAD
+
+# Window size and display margin
+
+- Display Panel -> Window Size: 800 x 800, 600 x 800 (narrow), 625 x 670 (original) or Custom...
+  (any size from 600 x 600 up to the screen). The size, including one set by dragging the
+  window edges, is remembered in Session.json and restored at startup.
+- The black display panel now has an 8 px margin on both sides, so the reading and MIN/AVG no
+  longer touch the window edges. A reading too wide for the window shrinks to fit instead of
+  being cut off.
+
+## Updating the git history (once)
+
+    git fetch v2-size.bundle main
+    git reset FETCH_HEAD

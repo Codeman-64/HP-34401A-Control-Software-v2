@@ -432,6 +432,8 @@ namespace HP_34401A
             public string Range { get; set; } = "";
             public List<string> Config { get; set; } = new List<string>(); //last button per config category, in click order
             public double UpdateSpeed { get; set; } = 1000;
+            public double WindowWidth { get; set; } = 0;  //0 = use the default size
+            public double WindowHeight { get; set; } = 0;
         }
 
         private static readonly string Session_File = System.IO.Path.Combine(
@@ -459,6 +461,7 @@ namespace HP_34401A
             {
                 Session = new Session_Settings();
             }
+            Apply_Saved_Window_Size();
             //See every button click (also ones already handled) so settings can be remembered.
             AddHandler(ButtonBase.ClickEvent, new RoutedEventHandler(Track_Session_Click), true);
         }
@@ -512,6 +515,7 @@ namespace HP_34401A
             try
             {
                 Session.UpdateSpeed = UpdateSpeed;
+                Remember_Window_Size();
                 Directory.CreateDirectory(System.IO.Path.GetDirectoryName(Session_File));
                 File.WriteAllText(Session_File, JsonSerializer.Serialize(Session, new JsonSerializerOptions { WriteIndented = true }));
             }
