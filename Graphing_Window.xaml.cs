@@ -120,7 +120,34 @@ namespace HP_34401A
             GraphRender.Start();
         }
 
+        //Timer callback (pool thread). The data arrays are also read by the renderer on the UI thread,
+        //so all inserting/resizing is done on this window's UI thread to avoid tearing and races.
         private void Data_Insert_Graph(object sender, EventArgs e)
+        {
+            try
+            {
+                Dispatcher.Invoke(Data_Insert_Graph_Core);
+            }
+            catch (Exception)
+            {
+                //window is closing
+            }
+            finally
+            {
+                try
+                {
+                    if (!Dispatcher.HasShutdownStarted)
+                    {
+                        DataProcess.Enabled = true;
+                    }
+                }
+                catch (ObjectDisposedException)
+                {
+                }
+            }
+        }
+
+        private void Data_Insert_Graph_Core()
         {
 
             if (Graph_Reset == true)
@@ -168,15 +195,16 @@ namespace HP_34401A
                     string[] Data_Dequeue = Data_Queue.Take().Split(',');
                     if (Data_Dequeue[1] == "+9.90000000E+37" || Data_Dequeue[1] == "-9.90000000E+37")
                     {
-                        Data_Dequeue = null;
+                        //Overload / open: not plottable, but count it so it isn't silently lost
+                        ++Invalid_Samples;
                     }
                     else 
                     {
-                        bool isValidMeasurement = double.TryParse(Data_Dequeue[1], out double Measurement);
+                        bool isValidMeasurement = double.TryParse(Data_Dequeue[1], NumberStyles.Float, CultureInfo.InvariantCulture, out double Measurement);
 
                         if (isValidMeasurement == true)
                         {
-                            Measurement_DateTime[Measurement_Count] = DateTime.ParseExact(Data_Dequeue[0], "yyyy-MM-dd h:mm:ss tt", null);
+                            Measurement_DateTime[Measurement_Count] = DateTime.ParseExact(Data_Dequeue[0], "yyyy-MM-dd h:mm:ss tt", CultureInfo.InvariantCulture);
                             Measurement_Data[Measurement_Count] = Measurement;
                             Measurement_Plot.MaxRenderIndex = Measurement_Count;
                             Measurement_Count += 1;
@@ -211,8 +239,6 @@ namespace HP_34401A
                     Insert_Log(Ex.Message, 1);
                 }
             }
-
-            DataProcess.Enabled = true;
         }
 
         private void Calculate_Moving_Average(double measurement)

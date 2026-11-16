@@ -167,6 +167,10 @@ namespace HP_34401A
         public MainWindow()
         {
             InitializeComponent();
+            //Meter replies always use '.' as the decimal separator. Make every thread (timers, pool threads)
+            //parse and format numbers that way, not just the UI thread.
+            CultureInfo.DefaultThreadCurrentCulture = CultureInfo.CreateSpecificCulture("en-US");
+            CultureInfo.DefaultThreadCurrentUICulture = CultureInfo.CreateSpecificCulture("en-US");
             if (Thread.CurrentThread.CurrentCulture.Name != "en-US")
             {
                 Thread.CurrentThread.CurrentCulture = CultureInfo.CreateSpecificCulture("en-US");
@@ -196,7 +200,7 @@ namespace HP_34401A
 
         private void Save_MeasurementData_to_files(Object source, ElapsedEventArgs e)
         {
-            string Date = DateTime.UtcNow.ToString("yyyy-MM-dd");
+            string Date = DateTime.Now.ToString("yyyy-MM-dd"); //local date, so files roll over at local midnight
             int VDC_Count = save_data_VDC.Count;
             int ADC_Count = save_data_ADC.Count;
             int VAC_Count = save_data_VAC.Count;
@@ -366,7 +370,7 @@ namespace HP_34401A
                 }
                 catch (Exception)
                 {
-                    insert_Log("Cannot save VDCVAC measurements to text file.", 1);
+                    insert_Log("Cannot save DIODE measurements to text file.", 1);
                 }
             }
 
@@ -384,7 +388,7 @@ namespace HP_34401A
                 }
                 catch (Exception)
                 {
-                    insert_Log("Cannot save ADCAAC measurements to text file.", 1);
+                    insert_Log("Cannot save CONTINUITY measurements to text file.", 1);
                 }
             }
 
@@ -1907,21 +1911,31 @@ namespace HP_34401A
             }
         }
 
-        //Writes data to a file
+        //Writes data to a file. Called from the UI thread and from the data/timer threads.
+        private readonly object Log_File_Lock = new object();
         private void writeToFile(string data, string filePath, string fileName, bool append)
         {
             try
             {
-                using (TextWriter datatotxt = new StreamWriter(filePath + @"\" + fileName, append))
+                lock (Log_File_Lock)
                 {
-                    datatotxt.WriteLine(data.Trim());
+                    string path = System.IO.Path.Combine(filePath, fileName);
+                    if (append)
+                    {
+                        File.AppendAllText(path, data.Trim() + Environment.NewLine);
+                    }
+                    else
+                    {
+                        File.WriteAllText(path, data.Trim() + Environment.NewLine);
+                    }
                 }
             }
-            catch (Exception)
+            catch (Exception Ex)
             {
                 saveOutputLog = false;
-                SaveOutputLog.IsChecked = false;
-                insert_Log("Cannot write Output Log to text file.", 1);
+                //UI controls may only be touched on the UI thread
+                Dispatcher.BeginInvoke(new Action(() => SaveOutputLog.IsChecked = false));
+                insert_Log("Cannot write Output Log to text file: " + Ex.Message, 1);
                 insert_Log("Save Output Log option disabled.", 1);
                 insert_Log("Enable it again from Data Logger Menu if you wish to try again.", 1);
             }
