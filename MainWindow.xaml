@@ -28,6 +28,8 @@
                 <MenuItem x:Name="Connect" Header="Connect" IsCheckable="False" IsChecked="False" Click="Connect_Click"/>
                 <MenuItem x:Name="Stop_Sampling" Header="Sampling" IsCheckable="True" IsChecked="True" Click="Stop_Sampling_Click" IsEnabled="False"/>
                 <MenuItem x:Name="Sampling_Only" Header="Sampling Only" IsCheckable="True" IsChecked="False" IsEnabled="False" Click="Sampling_Only_Click"/>
+                <MenuItem x:Name="RestoreSession" Header="Restore Last Settings on Connect" IsCheckable="True" IsChecked="True"
+                          ToolTip="After connecting, re-apply the last function, range, NPLC, auto zero and update speed."/>
                 <MenuItem x:Name="Exit" Header="Exit" IsCheckable="False" IsChecked="False" Click="Exit_Click"/>
             </MenuItem>
             <MenuItem Header="Display Panel" IsCheckable="False" IsChecked="False">
@@ -316,6 +318,12 @@
                     <MenuItem x:Name="Voice_Precision_6" Header="6" IsCheckable="True" IsChecked="False" Click="Voice_Precision_6_Click"/>
                     <MenuItem x:Name="Voice_Precision_7" Header="7" IsCheckable="True" IsChecked="False" Click="Voice_Precision_7_Click"/>
                 </MenuItem>
+            </MenuItem>
+            <MenuItem x:Name="MeterTools" Header="Meter Tools" IsCheckable="False" IsChecked="False" IsEnabled="False">
+                <MenuItem.ToolTip>
+                    <ToolTip>Meter math (null, dB, dBm, limit test) and burst capture.</ToolTip>
+                </MenuItem.ToolTip>
+                <MenuItem Header="Math &amp; Burst Capture..." Click="MeterTools_Click"/>
             </MenuItem>
             <MenuItem Header="About" IsCheckable="False" IsChecked="False">
                 <MenuItem.ToolTip>

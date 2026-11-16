@@ -47,3 +47,28 @@ Run these in this folder (Developer PowerShell in Visual Studio, or Git Bash):
 
     git fetch v2-stage2.bundle main
     git reset FETCH_HEAD
+
+# Stage 3 changes
+
+- **New icon:** an original bench-multimeter icon (dark front, green readout, input terminals),
+  with hand-tuned 16 and 24 px versions for the title bar and taskbar.
+- **Meter error checking:** after every command the app reads `SYST:ERR?` until the queue is
+  empty and logs each meter error in red (e.g. `-113,"Undefined header"`).
+- **Meter Tools window** (new **Meter Tools** menu, enabled after connecting):
+  - *Math:* Null (offset or next reading), dB (reference in dBm or next reading), dBm
+    (reference resistance 50-8000 Ω), and limit test (lower/upper). dB/dBm readings are shown
+    without SI prefixes and labelled dB/dBm. With the limit test, the unit label turns into a red
+    HI or LO when a reading is out of limits, and each change is logged. Changing the
+    measurement function turns math off (the meter does this too).
+  - *Burst capture:* 2-512 readings at full meter speed into the meter's memory
+    (INIT / FETC?), then one transfer. Shows acquisition time, readings per second, min, max,
+    mean and standard deviation. Readings also go to the display, graph, table and log files,
+    and each burst is saved as a CSV in `<log folder>\Burst\`. The trigger source is restored afterwards.
+- **Saved settings:** the last function, range, NPLC/resolution, auto zero, input impedance,
+  AC bandwidth, gate time and update speed are saved to `%LocalAppData%\HP 34401A\Session.json`
+  and re-applied after connecting. Turn off with Config -> Restore Last Settings on Connect.
+
+## Updating the git history after stage 3 (once)
+
+    git fetch v2-stage3.bundle main
+    git reset FETCH_HEAD

@@ -185,6 +185,7 @@ namespace HP_34401A
             Check_Speech_MIN_MAX_Timer();
             Continuous_Voice_Measurement();
             Save_measurements_to_files_Timer();
+            Setup_Session_Tracking();
             insert_Log("Click the Config Menu then click Connect.", 5);
             insert_Log("USB to Serial Adapter and a Null Modem Cable/Adapter are required.", 5);
             insert_Log("This software only works with HP Agilent Keysight 34401A", 5);
@@ -454,6 +455,8 @@ namespace HP_34401A
                 saveMeasurements_Timer.Enabled = true;
                 Sampling_Only.IsEnabled = true;
                 DataLogger.IsEnabled = true;
+                MeterTools.IsEnabled = true;
+                Restore_Session();
             }
         }
 
@@ -794,7 +797,10 @@ namespace HP_34401A
                     else
                     {
                         double value = double.Parse(measurement, System.Globalization.NumberStyles.Float);
-                        DisplayData(measurement, value);
+                        if (!Display_Math_Value(value))
+                        {
+                            DisplayData(measurement, value);
+                        }
                         Display_MIN_MAX_AVG(value);
                         setContinuousVoiceMeasurement(value);
                     }
@@ -1153,6 +1159,7 @@ namespace HP_34401A
                 {
                     Serial_WriteQueue();
                     Measurement_Type_Select();
+                    Apply_Math_Labels();
                     unlockControls();
                     isUserSendCommand = false;
                     if (UpdateSpeed > 1000)
@@ -1243,9 +1250,9 @@ namespace HP_34401A
 
         }
 
-        private void Process_Measurement_Data(string data)
+        private void Process_Measurement_Data(string data, DateTime? when = null)
         {
-            string Date = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff");
+            string Date = (when ?? DateTime.Now).ToString("yyyy-MM-dd HH:mm:ss.fff");
             if (saveMeasurements == true)
             {
                 switch (Selected_Measurement_type)
@@ -1320,6 +1327,10 @@ namespace HP_34401A
                 string WriteCommand = SerialWriteQueue.Take();
                 Serial_Queue_Command_Process(WriteCommand);
                 Wait_For_Meter();
+                if (WriteCommand != "SYSTem:ERRor?")
+                {
+                    Check_Meter_Errors();
+                }
             }
         }
 
@@ -1341,6 +1352,11 @@ namespace HP_34401A
         private void Serial_Queue_Command_Process(string Command)
         {
             HP34401A.DiscardInBuffer();
+            if (Command.StartsWith("BURST ", StringComparison.Ordinal))
+            {
+                Run_Burst(int.Parse(Command.Substring(6), CultureInfo.InvariantCulture));
+                return;
+            }
             switch (Command)
             {
                 case "CONF:VOLT:DC DEF,DEF":
@@ -1354,6 +1370,7 @@ namespace HP_34401A
                 case "CONF:DIOD":
                 case "CONF:CONT":
                     Interlocked.Exchange(ref resetMinMaxAvg, 1);
+                    Math_Off_By_Function_Change();
                     HP34401A.WriteLine(Command);
                     break;
                 case "TRIGger:DELay?":
@@ -5851,6 +5868,8 @@ namespace HP_34401A
             {
                 return;
             }
+            Save_Session();
+            Tools_Window?.Close();
             isClosing = true;
             DataSampling = false;
             DataTimer.Stop();
