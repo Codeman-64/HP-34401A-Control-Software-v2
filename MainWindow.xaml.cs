@@ -1239,8 +1239,10 @@ namespace HP_34401A
         private void Read_Measurement()
         {
             HP34401A.DiscardInBuffer();
+            long readStart = Trace_Clock.ElapsedMilliseconds;
             Meter_Write("READ?");
             string data = Meter_ReadLine().Trim();
+            Last_Read_Ms = Trace_Clock.ElapsedMilliseconds - readStart; //how long one reading takes now
             int Length = data.Length;
             if (Length == 15)
             {
@@ -1362,9 +1364,10 @@ namespace HP_34401A
             HP34401A.DiscardInBuffer();
             if (Command == "MATH ON")
             {
-                //After CALCulate:STATe ON the meter answers no queries until it has taken a reading
-                //(NULL and dB use that first reading as their reference). Take it straight away.
+                //After CALCulate:STATe ON the meter takes a reading (NULL and dB use it as their reference)
+                //and ignores serial input meanwhile. Wait for that, then read once to confirm.
                 Meter_Write("CALCulate:STATe ON");
+                Wait_Meter_Busy();
                 Meter_Write("READ?");
                 string first = Meter_ReadLine().Trim();
                 insert_Log("Meter math enabled; first reading " + first + " taken as reference where needed.", 3);
@@ -1707,6 +1710,13 @@ namespace HP_34401A
                     break;
                 default:
                     Meter_Write(Command);
+                    //With math on, changing a math setting (offset, reference, limits) makes the meter take
+                    //a reading, during which it ignores serial input.
+                    if (Math_Mode != Meter_Math.Off && Command.StartsWith("CALC", StringComparison.OrdinalIgnoreCase) &&
+                        !Command.StartsWith("CALCulate:FUNCtion", StringComparison.OrdinalIgnoreCase))
+                    {
+                        Wait_Meter_Busy();
+                    }
                     break;
             }
         }

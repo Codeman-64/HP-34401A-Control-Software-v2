@@ -64,11 +64,47 @@ namespace HP_34401A
         volatile bool Trace_Serial = false;
         readonly Stopwatch Trace_Clock = Stopwatch.StartNew();
 
-        private void Meter_Write(string command)
+        //Duration of the last READ? (ms): roughly how long the meter is busy taking one reading.
+        long Last_Read_Ms = 1000;
+
+        //True once the meter's DTR (our DSR) has been seen asserted, i.e. the cable carries the handshake line.
+        bool Dsr_Wired = false;
+
+        //The meter ignores serial input while it is taking a reading triggered by a setting change.
+        //Wait about one reading time (plus margin), and for its ready line if the cable has it.
+        private void Wait_Meter_Busy()
         {
+            int ms = (int)Math.Min(10000, Math.Max(200, Last_Read_Ms + 150));
             if (Trace_Serial)
             {
-                insert_Log(">> " + command + "   (t=" + Trace_Clock.ElapsedMilliseconds + " ms)", 4);
+                insert_Log("   waiting " + ms + " ms for the meter to finish its reading", 4);
+            }
+            Thread.Sleep(ms);
+        }
+
+        private void Meter_Write(string command)
+        {
+            bool dsr = HP34401A.DsrHolding;
+            if (dsr)
+            {
+                Dsr_Wired = true;
+            }
+            else if (Dsr_Wired)
+            {
+                //Meter signals busy on its DTR line: wait (max 10 s) until it is ready for input.
+                Stopwatch w = Stopwatch.StartNew();
+                while (!HP34401A.DsrHolding && w.ElapsedMilliseconds < 10000 && !isClosing)
+                {
+                    Thread.Sleep(1);
+                }
+                if (Trace_Serial)
+                {
+                    insert_Log("   meter busy (DSR low) for " + w.ElapsedMilliseconds + " ms", 4);
+                }
+            }
+            if (Trace_Serial)
+            {
+                insert_Log(">> " + command + "   (t=" + Trace_Clock.ElapsedMilliseconds + " ms, DSR=" + (dsr ? 1 : 0) + ")", 4);
             }
             HP34401A.WriteLine(command);
         }

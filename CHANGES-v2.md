@@ -111,3 +111,17 @@ Run these in this folder (Developer PowerShell in Visual Studio, or Git Bash):
 
     git fetch v2-stage3c.bundle main
     git reset FETCH_HEAD
+
+# Stage 3d fix
+
+- The traffic log showed that with math on, changing a math setting (`CALC:STAT ON`, offset,
+  reference, limits) makes the meter take a reading, and anything sent during that reading is
+  lost. The app now waits one reading time (measured from the last `READ?`, plus 150 ms) after
+  those commands. (The original code avoided this only by pausing 1.2 s after every command.)
+- If the cable carries the meter's DTR line (PC DSR), the app also waits for it before sending.
+  The traffic log shows `DSR=0/1` for each command.
+
+## Updating the git history after stage 3d (once)
+
+    git fetch v2-stage3d.bundle main
+    git reset FETCH_HEAD
