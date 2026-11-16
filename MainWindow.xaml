@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:HP_34401A"
         mc:Ignorable="d"
-        Title="HP 34401A" Height="670" Width="625" Closed="Main_Window_Closed">
+        Title="HP 34401A" Height="670" Width="625" Closing="Window_Closing" Closed="Main_Window_Closed">
     <Grid>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="*"/>

@@ -132,7 +132,13 @@ namespace HP_34401A
         private System.Timers.Timer saveMeasurements_Timer;
 
         //Allow data timer to get data from multimeter or not
-        bool DataSampling = false;
+        volatile bool DataSampling = false;
+
+        //Shutdown / connection-loss handling
+        volatile bool isClosing = false;
+        bool Shutdown_Done = false;
+        readonly ManualResetEventSlim Comm_Idle = new ManualResetEventSlim(true);
+        int Reconnect_Failures = 0;
 
         //Data is stored here for display
         BlockingCollection<string> measurements = new BlockingCollection<string>();
@@ -420,9 +426,18 @@ namespace HP_34401A
         {
             if (Serial_COM_Info.isConnected == true)
             {
+                try
+                {
+                    Serial_Connect();
+                }
+                catch (Exception Ex)
+                {
+                    Serial_COM_Info.isConnected = false;
+                    insert_Log("Could not open " + Serial_COM_Info.COM_Port + ": " + Ex.Message, 1);
+                    return;
+                }
                 Connect.IsEnabled = false;
                 unlockControls();
-                Serial_Connect();
                 this.Title = "HP 34401A " + Serial_COM_Info.COM_Port;
                 DataSampling = true;
                 saveOutputLog = true;
@@ -664,7 +679,64 @@ namespace HP_34401A
             HP34401A.RtsEnable = Serial_COM_Info.COM_RtsEnable;
             HP34401A.DtrEnable = Serial_COM_Info.COM_DtrEnable;
             HP34401A.Handshake = (Handshake)Serial_COM_Info.COM_Handshake;
+            HP34401A.NewLine = "\n";
             HP34401A.Open();
+            HP34401A.DiscardInBuffer();
+        }
+
+        //True when the exception means the port itself is gone (adapter unplugged, port closed),
+        //as opposed to a meter that was simply slow to answer.
+        private static bool Is_Port_Lost(Exception Ex)
+        {
+            return Ex is IOException || Ex is InvalidOperationException || Ex is UnauthorizedAccessException || Ex is ObjectDisposedException;
+        }
+
+        //Called on the data thread after the port was lost. Retries quietly; logs the first failure and every 10th.
+        private void Try_Reopen_Port()
+        {
+            try
+            {
+                if (HP34401A != null)
+                {
+                    try { HP34401A.Close(); } catch (Exception) { }
+                    HP34401A.Dispose();
+                }
+                Serial_Connect();
+                HP34401A.WriteLine("SYSTem:REMote");
+                Thread.Sleep(100);
+                Reconnect_Failures = 0;
+                insert_Log("Reconnected to " + Serial_COM_Info.COM_Port + ".", 0);
+            }
+            catch (Exception Ex)
+            {
+                if (Reconnect_Failures % 10 == 0)
+                {
+                    insert_Log("Connection to " + Serial_COM_Info.COM_Port + " lost (" + Ex.Message + "). Retrying...", 1);
+                }
+                Reconnect_Failures++;
+                Thread.Sleep(2000);
+            }
+        }
+
+        //Puts the meter back in local mode (front panel usable) and closes the port. Data thread must be idle.
+        private void Release_Meter()
+        {
+            try
+            {
+                if (HP34401A != null && HP34401A.IsOpen)
+                {
+                    HP34401A.WriteLine("SYSTem:LOCal");
+                    Thread.Sleep(150);
+                    HP34401A.Close();
+                }
+            }
+            catch (Exception)
+            {
+            }
+            finally
+            {
+                HP34401A?.Dispose();
+            }
         }
 
         private void Create_GetDataTimer()
@@ -1059,8 +1131,19 @@ namespace HP_34401A
 
         private void HP34401ACommunicateEvent(Object source, ElapsedEventArgs e)
         {
+            if (isClosing)
+            {
+                return;
+            }
+            Comm_Idle.Reset();
             try
             {
+                if (HP34401A == null || !HP34401A.IsOpen)
+                {
+                    Try_Reopen_Port();
+                    return;
+                }
+
                 if (isUserSendCommand == true)
                 {
                     Serial_WriteQueue();
@@ -1079,40 +1162,62 @@ namespace HP_34401A
                     {
                         Read_Measurement();
                         Process_Data.Start();
-                    } while (isSamplingOnly == true & DataSampling == true);
+                    } while (isSamplingOnly == true & DataSampling == true & !isClosing);
                 }
-                if (isUpdateSpeed_Changed == true) 
-                {
-                    isUpdateSpeed_Changed = false;
-                    insert_Log("Update Speed has been set to " + (UpdateSpeed / 1000) + " seconds.", 0);
-                    DataTimer.Interval = UpdateSpeed;
-                }
-                DataTimer.Enabled = true;
             }
             catch (Exception Ex)
             {
-                this.Dispatcher.Invoke(DispatcherPriority.ContextIdle, new ThreadStart(delegate
+                if (Is_Port_Lost(Ex))
                 {
-                    if (Show_COM_Error.IsChecked == true)
+                    Try_Reopen_Port();
+                }
+                else
+                {
+                    //A timeout: the meter may still send its late reply. Wait for it and throw it away,
+                    //otherwise every following reading would be one behind.
+                    Discard_Late_Reply();
+                    this.Dispatcher.Invoke(DispatcherPriority.ContextIdle, new ThreadStart(delegate
                     {
-                        insert_Log(Ex.Message, 2);
-                        insert_Log("Could not get a measurement reading.", 2);
-                        insert_Log("Don't worry. Trying again.", 2);
-                        insert_Log("Slow the Update Speed if warning persists.", 2);
-                    }
-                }));
+                        if (Show_COM_Error.IsChecked == true)
+                        {
+                            insert_Log(Ex.Message, 2);
+                            insert_Log("Could not get a measurement reading. Trying again.", 2);
+                            insert_Log("Slow the Update Speed if warning persists.", 2);
+                        }
+                    }));
+                }
+            }
+            finally
+            {
                 if (isUpdateSpeed_Changed == true)
                 {
                     isUpdateSpeed_Changed = false;
                     insert_Log("Update Speed has been set to " + (UpdateSpeed / 1000) + " seconds.", 0);
                     DataTimer.Interval = UpdateSpeed;
                 }
-                DataTimer.Enabled = true;
+                Comm_Idle.Set();
+                if (!isClosing)
+                {
+                    DataTimer.Enabled = true;
+                }
+            }
+        }
+
+        private void Discard_Late_Reply()
+        {
+            try
+            {
+                Thread.Sleep(250);
+                HP34401A.DiscardInBuffer();
+            }
+            catch (Exception)
+            {
             }
         }
 
         private void Read_Measurement()
         {
+            HP34401A.DiscardInBuffer();
             HP34401A.WriteLine("READ?");
             string data = HP34401A.ReadLine().Trim();
             int Length = data.Length;
@@ -1215,6 +1320,7 @@ namespace HP_34401A
 
         private void Serial_Queue_Command_Process(string Command)
         {
+            HP34401A.DiscardInBuffer();
             switch (Command)
             {
                 case "CONF:VOLT:DC DEF,DEF":
@@ -1886,7 +1992,7 @@ namespace HP_34401A
 
         private void Exit_Click(object sender, RoutedEventArgs e)
         {
-            Application.Current.Shutdown();
+            this.Close();
         }
 
         //-----------------------------------------------------------------------
@@ -5739,8 +5845,30 @@ namespace HP_34401A
 
         private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
         {
+            if (Shutdown_Done)
+            {
+                return;
+            }
+            isClosing = true;
+            DataSampling = false;
             DataTimer.Stop();
-            DataTimer.Dispose();
+
+            //Wait (off the UI thread) for any reading in progress to finish, then return the meter
+            //to local mode and close the port before letting the window close.
+            e.Cancel = true;
+            this.IsEnabled = false;
+            this.Title = "HP 34401A - closing...";
+            Task.Run(() =>
+            {
+                Comm_Idle.Wait(Math.Max(3000, Serial_COM_Info.COM_ReadTimeout + 1000));
+                Release_Meter();
+                Dispatcher.BeginInvoke(new Action(() =>
+                {
+                    Shutdown_Done = true;
+                    DataTimer.Dispose();
+                    this.Close();
+                }));
+            });
         }
 
         private void FSI_Display_Click(object sender, RoutedEventArgs e)
@@ -6131,11 +6259,7 @@ namespace HP_34401A
         {
             try
             {
-                if (Serial_COM_Info.isConnected == true)
-                {
-                    HP34401A.Close();
-                    HP34401A.Dispose();
-                }
+                saveOutputLog = false;
             }
             catch (Exception)
             {
