@@ -72,3 +72,19 @@ Run these in this folder (Developer PowerShell in Visual Studio, or Git Bash):
 
     git fetch v2-stage3.bundle main
     git reset FETCH_HEAD
+
+# Stage 3a fixes
+
+- Command timeouts are always logged (they were hidden unless "Show COM Errors" was ticked),
+  and the meter error check now runs even when a command fails, so meter errors appear at once.
+- `*OPC?` waits at most 3 s instead of the full read timeout.
+- Error-queue replies that aren't error codes are logged and skipped instead of ending the check.
+- Fixed (original bug): with an update speed above 1 s, a button press could start a second
+  communication cycle while one was running, causing "-410 Query INTERRUPTED" errors.
+- New option Display Panel -> Log Serial Traffic (diagnostics): logs every command sent (>>)
+  and reply (<<) with timings.
+
+## Updating the git history after stage 3a (once)
+
+    git fetch v2-stage3a.bundle main
+    git reset FETCH_HEAD

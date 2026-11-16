@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
@@ -30,17 +30,75 @@ namespace HP_34401A
         //Reads SYSTem:ERRor? until the queue is empty and logs every error. Runs on the data thread.
         private void Check_Meter_Errors()
         {
-            for (int i = 0; i < 20; i++)
+            try
             {
-                HP34401A.WriteLine("SYSTem:ERRor?");
-                string reply = HP34401A.ReadLine().Trim();
-                string codeText = reply.Split(',')[0].Trim();
-                if (!int.TryParse(codeText, NumberStyles.Integer, CultureInfo.InvariantCulture, out int code) || code == 0)
+                for (int i = 0; i < 20; i++)
                 {
-                    return;
+                    Meter_Write("SYSTem:ERRor?");
+                    string reply = Meter_ReadLine().Trim();
+                    string codeText = reply.Split(',')[0].Trim();
+                    if (!int.TryParse(codeText, NumberStyles.Integer, CultureInfo.InvariantCulture, out int code))
+                    {
+                        //Not an error-queue reply: a leftover from an earlier query. Skip it and ask again.
+                        insert_Log("Unexpected reply while reading meter errors: " + reply, 2);
+                        continue;
+                    }
+                    if (code == 0)
+                    {
+                        return;
+                    }
+                    insert_Log("Meter error " + reply, 1);
                 }
-                insert_Log("Meter error " + reply, 1);
             }
+            catch (TimeoutException)
+            {
+                insert_Log("No reply from the meter to SYSTem:ERRor? (timed out).", 2);
+                Discard_Late_Reply();
+            }
+        }
+
+        //---------------------------------------------------------------------------------------
+        // Serial traffic (optionally traced to the output log for diagnosing)
+        //---------------------------------------------------------------------------------------
+
+        volatile bool Trace_Serial = false;
+        readonly Stopwatch Trace_Clock = Stopwatch.StartNew();
+
+        private void Meter_Write(string command)
+        {
+            if (Trace_Serial)
+            {
+                insert_Log(">> " + command + "   (t=" + Trace_Clock.ElapsedMilliseconds + " ms)", 4);
+            }
+            HP34401A.WriteLine(command);
+        }
+
+        private string Meter_ReadLine()
+        {
+            long t0 = Trace_Clock.ElapsedMilliseconds;
+            try
+            {
+                string reply = HP34401A.ReadLine();
+                if (Trace_Serial)
+                {
+                    insert_Log("<< " + reply.Trim() + "   (" + (Trace_Clock.ElapsedMilliseconds - t0) + " ms)", 4);
+                }
+                return reply;
+            }
+            catch (TimeoutException)
+            {
+                if (Trace_Serial)
+                {
+                    insert_Log("<< TIMEOUT after " + (Trace_Clock.ElapsedMilliseconds - t0) + " ms", 1);
+                }
+                throw;
+            }
+        }
+
+        private void LogSerialTraffic_Click(object sender, RoutedEventArgs e)
+        {
+            Trace_Serial = LogSerialTraffic.IsChecked == true;
+            insert_Log(Trace_Serial ? "Serial traffic logging ON (every command and reply is logged)." : "Serial traffic logging OFF.", 3);
         }
 
         //---------------------------------------------------------------------------------------
@@ -208,19 +266,19 @@ namespace HP_34401A
             string result;
             try
             {
-                HP34401A.WriteLine("TRIGger:SOURce?");
-                oldTrigger = HP34401A.ReadLine().Trim();
+                Meter_Write("TRIGger:SOURce?");
+                oldTrigger = Meter_ReadLine().Trim();
 
-                HP34401A.WriteLine("TRIGger:SOURce IMMediate");
-                HP34401A.WriteLine("SAMPle:COUNt " + count);
+                Meter_Write("TRIGger:SOURce IMMediate");
+                Meter_Write("SAMPle:COUNt " + count);
                 Wait_For_Meter();
 
                 //FETCh? waits until all readings are taken. Allow plenty of time for slow NPLC settings.
                 HP34401A.ReadTimeout = 20 * 60 * 1000;
                 DateTime start = DateTime.Now;
                 Stopwatch sw = Stopwatch.StartNew();
-                HP34401A.WriteLine("INITiate");
-                HP34401A.WriteLine("FETCh?");
+                Meter_Write("INITiate");
+                Meter_Write("FETCh?");
 
                 //The first byte arrives when acquisition has finished: that gives the acquisition time.
                 while (HP34401A.BytesToRead == 0 && sw.ElapsedMilliseconds < HP34401A.ReadTimeout && !isClosing)
@@ -228,7 +286,7 @@ namespace HP_34401A
                     Thread.Sleep(2);
                 }
                 double acquireSeconds = sw.Elapsed.TotalSeconds;
-                string all = HP34401A.ReadLine().Trim();
+                string all = Meter_ReadLine().Trim();
                 double totalSeconds = sw.Elapsed.TotalSeconds;
 
                 string[] readings = all.Split(',').Select(r => r.Trim()).Where(r => r.Length > 0).ToArray();
@@ -286,8 +344,8 @@ namespace HP_34401A
                 HP34401A.ReadTimeout = oldTimeout;
                 try
                 {
-                    HP34401A.WriteLine("SAMPle:COUNt 1");
-                    HP34401A.WriteLine("TRIGger:SOURce " + oldTrigger);
+                    Meter_Write("SAMPle:COUNt 1");
+                    Meter_Write("TRIGger:SOURce " + oldTrigger);
                 }
                 catch (Exception)
                 {

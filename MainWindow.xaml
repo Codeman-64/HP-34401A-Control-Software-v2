@@ -240,6 +240,7 @@
                 </MenuItem>
                 <MenuItem x:Name="Show_Display_Error" Header="Show Display Errors" IsCheckable="True" IsChecked="False"/>
                 <MenuItem x:Name="Show_COM_Error" Header="Show COM Errors" IsCheckable="True" IsChecked="False"/>
+                <MenuItem x:Name="LogSerialTraffic" Header="Log Serial Traffic (diagnostics)" IsCheckable="True" IsChecked="False" Click="LogSerialTraffic_Click"/>
             </MenuItem>
             <MenuItem x:Name="DataLogger" Header="Data Logger" IsCheckable="False" IsChecked="False" IsEnabled="False">
                 <MenuItem.ToolTip>
