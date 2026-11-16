@@ -44,6 +44,7 @@ namespace HP_34401A
         private const double VFD_Main_Size = 64, VFD_Small_Size = 13;  //13 = same height as the MIN:/MAX:/AVG: capitals
         private const double VFD_Main_Top = 6;    //centres the 64 px reading in the 75 px top row
         private const double VFD_Small_Top = 6;   //puts the MIN/MAX/AVG values on the same baseline as their labels
+        private const double VFD_Char_Width = 0.85; //character width (1.0 = as designed); the meter's characters are a little narrower
         private Viewbox Main_Readout_Box;
         private Thickness Main_Box_Standard_Margin;
         private double Main_Box_Standard_Height;
@@ -202,6 +203,7 @@ namespace HP_34401A
                     Color colour = (part.Label.Foreground as SolidColorBrush)?.Color ?? Colors.Cyan;
                     part.Label.Effect = new DropShadowEffect { ShadowDepth = 0, BlurRadius = part.IsMain ? 14 : 6, Opacity = 0.7, Color = colour };
                     Grid vfdCell = (Grid)part.Label.Parent;
+                    vfdCell.LayoutTransform = new ScaleTransform(VFD_Char_Width, 1);
                     if (!part.IsMain)
                     {
                         Thickness m = part.StandardMargin;
@@ -216,6 +218,7 @@ namespace HP_34401A
                     part.Ghost.Visibility = Visibility.Collapsed;
                     part.Label.Effect = null;
                     ((Grid)part.Label.Parent).Margin = part.StandardMargin;
+                    ((Grid)part.Label.Parent).LayoutTransform = Transform.Identity;
                 }
                 Readout_Changed(part); //re-spell units and refresh the ghost
             }
