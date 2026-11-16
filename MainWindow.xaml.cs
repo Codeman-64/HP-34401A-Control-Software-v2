@@ -73,7 +73,8 @@ namespace HP_34401A
         BlockingCollection<string> SerialWriteQueue = new BlockingCollection<string>();
 
         //Clear Logs after this count
-        int Auto_Clear_Output_Log_Count = 20;
+        //Output log keeps at most this many lines; the oldest are removed first
+        int Auto_Clear_Output_Log_Count = 2000;
 
         //Lets the function know the queue has data
         bool isUserSendCommand = false;
@@ -1244,7 +1245,7 @@ namespace HP_34401A
 
         private void Process_Measurement_Data(string data)
         {
-            string Date = DateTime.Now.ToString("yyyy-MM-dd h:mm:ss tt");
+            string Date = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff");
             if (saveMeasurements == true)
             {
                 switch (Selected_Measurement_type)
@@ -1318,7 +1319,22 @@ namespace HP_34401A
             {
                 string WriteCommand = SerialWriteQueue.Take();
                 Serial_Queue_Command_Process(WriteCommand);
-                Thread.Sleep(1200);
+                Wait_For_Meter();
+            }
+        }
+
+        //Waits until the meter has finished every command sent so far, instead of a fixed delay.
+        //*OPC? is answered with "1" once all previous commands are complete. Any other line read
+        //here is a leftover reply (e.g. from a query) and is skipped.
+        private void Wait_For_Meter()
+        {
+            HP34401A.WriteLine("*OPC?");
+            for (int i = 0; i < 4; i++)
+            {
+                if (HP34401A.ReadLine().Trim() == "1")
+                {
+                    return;
+                }
             }
         }
 
@@ -1342,13 +1358,11 @@ namespace HP_34401A
                     break;
                 case "TRIGger:DELay?":
                     HP34401A.WriteLine(Command);
-                    Thread.Sleep(100);
                     string Trig_Delay_Query = HP34401A.ReadLine().Trim();
                     insert_Log("Trigger Delay Value: " + Trig_Delay_Query, 0);
                     break;
                 case "TRIGger:DELay:AUTO?":
                     HP34401A.WriteLine(Command);
-                    Thread.Sleep(100);
                     string Trig_Delay_Auto_Query = HP34401A.ReadLine().Trim();
                     bool isValid_Trig_Delay_Auto_Query = double.TryParse(Trig_Delay_Auto_Query, out double Trig_Delay_Auto_Query_Value);
                     if (isValid_Trig_Delay_Auto_Query == true)
@@ -1373,61 +1387,51 @@ namespace HP_34401A
                     break;
                 case "CALibration:COUNt?":
                     HP34401A.WriteLine(Command);
-                    Thread.Sleep(100);
                     string CAL_Count_Query = HP34401A.ReadLine().Trim();
                     insert_Log("Calibration Count: " + CAL_Count_Query, 0);
                     break;
                 case "CALibration:SECure:STATe?":
                     HP34401A.WriteLine(Command);
-                    Thread.Sleep(100);
                     string CAL_Secure_State_Query = HP34401A.ReadLine().Trim();
                     insert_Log("Calibration Secure State: " + CAL_Secure_State_Query, 0);
                     break;
                 case "CALibration:STRing?":
                     HP34401A.WriteLine(Command);
-                    Thread.Sleep(100);
                     string CAL_Message_Query = HP34401A.ReadLine().Trim();
                     insert_Log("Calibration Stored Message: " + CAL_Message_Query, 0);
                     break;
                 case "CALibration:VALue?":
                     HP34401A.WriteLine(Command);
-                    Thread.Sleep(100);
                     string CAL_Value_Query = HP34401A.ReadLine().Trim();
                     insert_Log("Calibration Value: " + CAL_Value_Query, 0);
                     break;
                 case "SYSTem:ERRor?":
                     HP34401A.WriteLine(Command);
-                    Thread.Sleep(100);
                     string Error_Query = HP34401A.ReadLine().Trim();
                     insert_Log("Error: " + Error_Query, 0);
                     break;
                 case "ROUTe:TERMinals?":
                     HP34401A.WriteLine(Command);
-                    Thread.Sleep(100);
                     string Terminal_Query = HP34401A.ReadLine().Trim();
                     insert_Log("Input Terminal: " + Terminal_Query, 0);
                     break;
                 case "*IDN?":
                     HP34401A.WriteLine(Command);
-                    Thread.Sleep(100);
                     string IDN_Query = HP34401A.ReadLine().Trim();
                     insert_Log("Device ID: " + IDN_Query, 0);
                     break;
                 case "*STB?":
                     HP34401A.WriteLine(Command);
-                    Thread.Sleep(100);
                     string STB_Query = HP34401A.ReadLine().Trim();
                     insert_Log("STB: " + STB_Query, 0);
                     break;
                 case "SYSTem:VERSion?":
                     HP34401A.WriteLine(Command);
-                    Thread.Sleep(100);
                     string SCPI_Version_Query = HP34401A.ReadLine().Trim();
                     insert_Log("SCPI Version: " + SCPI_Version_Query, 0);
                     break;
                 case "DISPlay?":
                     HP34401A.WriteLine(Command);
-                    Thread.Sleep(100);
                     string Display_Query = HP34401A.ReadLine().Trim();
                     bool isValid_Display_Query = double.TryParse(Display_Query, out double Display_Query_Value);
                     if (isValid_Display_Query == true) 
@@ -1452,7 +1456,6 @@ namespace HP_34401A
                     break;
                 case "INPut:IMPedance:AUTO?":
                     HP34401A.WriteLine(Command);
-                    Thread.Sleep(100);
                     string DC_IMP_Query = HP34401A.ReadLine().Trim();
                     bool isValid_DC_IMP_Query = double.TryParse(DC_IMP_Query, out double DC_IMP_Query_Value);
                     if (isValid_DC_IMP_Query == true)
@@ -1479,7 +1482,6 @@ namespace HP_34401A
                     break;
                 case "DETector:BANDwidth?":
                     HP34401A.WriteLine(Command);
-                    Thread.Sleep(100);
                     string DET_BAND_Query = HP34401A.ReadLine().Trim();
                     bool isValid_DET_BAND_Query = double.TryParse(DET_BAND_Query, out double DET_BAND_Query_Value);
                     if (isValid_DET_BAND_Query == true)
@@ -1493,7 +1495,6 @@ namespace HP_34401A
                     break;
                 case "PERiod:APERture?":
                     HP34401A.WriteLine(Command);
-                    Thread.Sleep(100);
                     string PER_APER_Query = HP34401A.ReadLine().Trim();
                     bool isValid_PER_APER_Query = double.TryParse(PER_APER_Query, out double PER_APER_Query_Value);
                     if (isValid_PER_APER_Query == true)
@@ -1507,7 +1508,6 @@ namespace HP_34401A
                     break;
                 case "FREQuency:APERture?":
                     HP34401A.WriteLine(Command);
-                    Thread.Sleep(100);
                     string FREQ_APER_Query = HP34401A.ReadLine().Trim();
                     bool isValid_FREQ_APER_Query = double.TryParse(FREQ_APER_Query, out double FREQ_APER_Query_Value);
                     if (isValid_FREQ_APER_Query == true)
@@ -1521,7 +1521,6 @@ namespace HP_34401A
                     break;
                 case "ZERO:AUTO?":
                     HP34401A.WriteLine(Command);
-                    Thread.Sleep(100);
                     string AutoZero_Query = HP34401A.ReadLine().Trim();
                     bool isValid_AutoZero_Query = double.TryParse(AutoZero_Query, out double AutoZero_Query_Value);
                     if (isValid_AutoZero_Query == true)
@@ -1546,7 +1545,6 @@ namespace HP_34401A
                     break;
                 case "FUNCtion?":
                     HP34401A.WriteLine(Command);
-                    Thread.Sleep(100);
                     string Function_Query = HP34401A.ReadLine().Trim();
                     switch (Function_Query)
                     {
@@ -1587,7 +1585,6 @@ namespace HP_34401A
                     break;
                 case "CONFigure?":
                     HP34401A.WriteLine(Command);
-                    Thread.Sleep(100);
                     string Function_Config_Query = HP34401A.ReadLine().Trim();
                     insert_Log(Function_Config_Query, 0);
                     break;
@@ -1600,7 +1597,6 @@ namespace HP_34401A
                 case "FREQuency:VOLTage:RANGe?":
                 case "PERiod:VOLTage:RANGe?":
                     HP34401A.WriteLine(Command);
-                    Thread.Sleep(100);
                     string Range_Query = HP34401A.ReadLine().Trim();
                     insert_Log(Command.ToUpper() + " " + Range_Query, 0);
                     break;
@@ -1613,7 +1609,6 @@ namespace HP_34401A
                 case "FREQuency:VOLTage:RANGe:AUTO?":
                 case "PERiod:VOLTage:RANGe:AUTO?":
                     HP34401A.WriteLine(Command);
-                    Thread.Sleep(100);
                     string Auto_Range_Query = HP34401A.ReadLine().Trim();
                     bool isValid_Auto_Range_Query = double.TryParse(Auto_Range_Query, out double Auto_Range_Query_Value);
                     if (isValid_Auto_Range_Query == true)
@@ -1645,7 +1640,6 @@ namespace HP_34401A
                 case "RES Query":
                     string Resolution_Command = SCPI_Measurement_Selected() + "RESolution?";
                     HP34401A.WriteLine(Resolution_Command);
-                    Thread.Sleep(100);
                     string Resolution_Query = HP34401A.ReadLine().Trim();
                     bool is_Res_valid = double.TryParse(Resolution_Query, out double Res_value);
                     if (is_Res_valid == true)
@@ -1659,14 +1653,12 @@ namespace HP_34401A
                     break;
                 case "TRIG Query":
                     HP34401A.WriteLine("TRIGger:SOURce?");
-                    Thread.Sleep(100);
                     string Trig_Query = HP34401A.ReadLine().Trim();
                     insert_Log("Trigger is currently set to " + Trig_Query, 0);
                     break;
                 case "NPLC Query":
                     string NPLC_Command = SCPI_Measurement_Selected() + "NPLCycles?";
                     HP34401A.WriteLine(NPLC_Command);
-                    Thread.Sleep(100);
                     string NPLC_Query = HP34401A.ReadLine().Trim();
                     bool is_NPLC_valid = double.TryParse(NPLC_Query, out double NPLC_value);
                     if (is_NPLC_valid == true)
@@ -1853,17 +1845,8 @@ namespace HP_34401A
         //inserts message to the output log
         private void insert_Log(string Message, int Code)
         {
-            string date = DateTime.Now.ToString("yyyy-MM-dd h:mm:ss tt");
+            string date = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff");
             SolidColorBrush Color;
-            this.Dispatcher.Invoke(DispatcherPriority.ContextIdle, new ThreadStart(delegate
-            {
-                if (Output_Log.Inlines.Count >= Auto_Clear_Output_Log_Count)
-                {
-                    Output_Log.Text = String.Empty;
-                    Output_Log.Inlines.Clear();
-                    Output_Log.Inlines.Add(new Run("[" + date + "]" + " " + "Output Log has been auto cleared. \n") { Foreground = Brushes.Green });
-                }
-            }));
             string Status = "";
             switch (Code)
             {
@@ -1899,6 +1882,11 @@ namespace HP_34401A
             Application.Current.Dispatcher.Invoke(DispatcherPriority.Background, new ThreadStart(delegate
             {
                 Output_Log.Inlines.Add(new Run("[" + date + "]" + " " + Status + " " + Message + "\n") { Foreground = Color });
+                //Trim the oldest lines instead of wiping the whole log
+                while (Output_Log.Inlines.Count > Auto_Clear_Output_Log_Count)
+                {
+                    Output_Log.Inlines.Remove(Output_Log.Inlines.FirstInline);
+                }
                 if (AutoScroll.IsChecked == true)
                 {
                     Output_Log_Scroll.ScrollToBottom();
@@ -2198,8 +2186,8 @@ namespace HP_34401A
 
         private void Auto_Clear_20_Click(object sender, RoutedEventArgs e)
         {
-            Interlocked.Exchange(ref Auto_Clear_Output_Log_Count, 20);
-            insert_Log("Output Log will be cleared after " + Auto_Clear_Output_Log_Count + " logs are inserted into it.", 0);
+            Interlocked.Exchange(ref Auto_Clear_Output_Log_Count, 500);
+            insert_Log("Output Log will keep the latest " + Auto_Clear_Output_Log_Count + " lines.", 0);
             Auto_Clear_20.IsChecked = true;
             Auto_Clear_40.IsChecked = false;
             Auto_Clear_60.IsChecked = false;
@@ -2207,8 +2195,8 @@ namespace HP_34401A
 
         private void Auto_Clear_40_Click(object sender, RoutedEventArgs e)
         {
-            Interlocked.Exchange(ref Auto_Clear_Output_Log_Count, 40);
-            insert_Log("Output Log will be cleared after " + Auto_Clear_Output_Log_Count + " logs are inserted into it.", 0);
+            Interlocked.Exchange(ref Auto_Clear_Output_Log_Count, 2000);
+            insert_Log("Output Log will keep the latest " + Auto_Clear_Output_Log_Count + " lines.", 0);
             Auto_Clear_20.IsChecked = false;
             Auto_Clear_40.IsChecked = true;
             Auto_Clear_60.IsChecked = false;
@@ -2216,8 +2204,8 @@ namespace HP_34401A
 
         private void Auto_Clear_60_Click(object sender, RoutedEventArgs e)
         {
-            Interlocked.Exchange(ref Auto_Clear_Output_Log_Count, 60);
-            insert_Log("Output Log will be cleared after " + Auto_Clear_Output_Log_Count + " logs are inserted into it.", 0);
+            Interlocked.Exchange(ref Auto_Clear_Output_Log_Count, 5000);
+            insert_Log("Output Log will keep the latest " + Auto_Clear_Output_Log_Count + " lines.", 0);
             Auto_Clear_20.IsChecked = false;
             Auto_Clear_40.IsChecked = false;
             Auto_Clear_60.IsChecked = true;

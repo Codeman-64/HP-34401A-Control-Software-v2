@@ -192,7 +192,7 @@ namespace HP_34401A
                     {
                         for (int i = 0; i < Measurement_Count; i++)
                         {
-                            datatotxt.WriteLine(Measurement_DateTime[i].ToString("yyyy-MM-dd h:mm:ss tt") + "," + Measurement_Data[i]);
+                            datatotxt.WriteLine(Measurement_DateTime[i].ToString("yyyy-MM-dd HH:mm:ss.fff") + "," + Measurement_Data[i]);
                         }
                     }
                 }
@@ -220,7 +220,7 @@ namespace HP_34401A
                     {
                         for (int i = 0; i < Measurement_Count; i++)
                         {
-                            datatotxt.WriteLine(Measurement_DateTime[i].ToString("yyyy-MM-dd h:mm:ss tt") + "," + Measurement_Data[i]);
+                            datatotxt.WriteLine(Measurement_DateTime[i].ToString("yyyy-MM-dd HH:mm:ss.fff") + "," + Measurement_Data[i]);
                         }
                     }
                 }

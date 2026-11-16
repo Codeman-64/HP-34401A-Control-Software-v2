@@ -560,10 +560,10 @@
                 </MenuItem.ToolTip>
                 <MenuItem x:Name="Auto_Scroll" Header="Auto Scroll" IsCheckable="True" IsChecked="True" Click="Auto_Scroll_Click"/>
                 <MenuItem Header="Auto Clear" IsCheckable="False" IsChecked="False">
-                    <MenuItem x:Name="Auto_Clear_20" Header="20 Logs" IsCheckable="True" IsChecked="False" Click="Auto_Clear_20_Click"/>
-                    <MenuItem x:Name="Auto_Clear_40" Header="40 Logs" IsCheckable="True" IsChecked="True" Click="Auto_Clear_40_Click"/>
-                    <MenuItem x:Name="Auto_Clear_80" Header="80 Logs" IsCheckable="True" IsChecked="False" Click="Auto_Clear_80_Click"/>
-                    <MenuItem x:Name="Auto_Clear_100" Header="100 Logs" IsCheckable="True" IsChecked="False" Click="Auto_Clear_100_Click"/>
+                    <MenuItem x:Name="Auto_Clear_20" Header="Keep 250 lines" IsCheckable="True" IsChecked="False" Click="Auto_Clear_20_Click"/>
+                    <MenuItem x:Name="Auto_Clear_40" Header="Keep 1000 lines" IsCheckable="True" IsChecked="True" Click="Auto_Clear_40_Click"/>
+                    <MenuItem x:Name="Auto_Clear_80" Header="Keep 2000 lines" IsCheckable="True" IsChecked="False" Click="Auto_Clear_80_Click"/>
+                    <MenuItem x:Name="Auto_Clear_100" Header="Keep 5000 lines" IsCheckable="True" IsChecked="False" Click="Auto_Clear_100_Click"/>
                 </MenuItem>
                 <MenuItem x:Name="Save_Log" Header="Save Output Log" IsCheckable="False" IsChecked="False" Click="Save_Log_Click"/>
                 <MenuItem x:Name="Clear_Log" Header="Clear Output Log" IsCheckable="False" IsChecked="False" Click="Clear_Log_Click"/>

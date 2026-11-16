@@ -37,7 +37,7 @@ namespace HP_34401A
         double[] Measurement_Data; //Waveform Array
 
         //Auto clear the output log after a specific amount of items inside the log has been reached.
-        int Auto_Clear_Output_Log_Count = 40; //This integer variable is thread safe, interlocked.exchange is used.
+        int Auto_Clear_Output_Log_Count = 1000; //This integer variable is thread safe, interlocked.exchange is used.
 
         // A counter that is incremented when a measurement is processed. Show how many measuremnet is displayed on the GUI window.
         int Measurement_Count; //For testing set
@@ -212,7 +212,7 @@ namespace HP_34401A
                     {
                         for (int i = 0; i < Measurement_Count; i++)
                         {
-                            datatotxt.WriteLine(Measurement_DateTime[i].ToString("yyyy-MM-dd h:mm:ss tt") + "," + Measurement_Data[i]);
+                            datatotxt.WriteLine(Measurement_DateTime[i].ToString("yyyy-MM-dd HH:mm:ss.fff") + "," + Measurement_Data[i]);
                         }
                     }
                 }
@@ -241,7 +241,7 @@ namespace HP_34401A
                     {
                         for (int i = 0; i < Measurement_Count; i++)
                         {
-                            datatotxt.WriteLine(Measurement_DateTime[i].ToString("yyyy-MM-dd h:mm:ss tt") + "," + Measurement_Data[i]);
+                            datatotxt.WriteLine(Measurement_DateTime[i].ToString("yyyy-MM-dd HH:mm:ss.fff") + "," + Measurement_Data[i]);
                         }
                     }
                 }
@@ -2354,8 +2354,8 @@ namespace HP_34401A
 
         private void Auto_Clear_20_Click(object sender, RoutedEventArgs e)
         {
-            Interlocked.Exchange(ref Auto_Clear_Output_Log_Count, 20);
-            Insert_Log("Output Log will be cleared after " + Auto_Clear_Output_Log_Count + " logs are inserted into it.", 0);
+            Interlocked.Exchange(ref Auto_Clear_Output_Log_Count, 250);
+            Insert_Log("Output Log will keep the latest " + Auto_Clear_Output_Log_Count + " lines.", 0);
             Auto_Clear_20.IsChecked = true;
             Auto_Clear_40.IsChecked = false;
             Auto_Clear_80.IsChecked = false;
@@ -2364,8 +2364,8 @@ namespace HP_34401A
 
         private void Auto_Clear_40_Click(object sender, RoutedEventArgs e)
         {
-            Interlocked.Exchange(ref Auto_Clear_Output_Log_Count, 40);
-            Insert_Log("Output Log will be cleared after " + Auto_Clear_Output_Log_Count + " logs are inserted into it.", 0);
+            Interlocked.Exchange(ref Auto_Clear_Output_Log_Count, 1000);
+            Insert_Log("Output Log will keep the latest " + Auto_Clear_Output_Log_Count + " lines.", 0);
             Auto_Clear_20.IsChecked = false;
             Auto_Clear_40.IsChecked = true;
             Auto_Clear_80.IsChecked = false;
@@ -2374,8 +2374,8 @@ namespace HP_34401A
 
         private void Auto_Clear_80_Click(object sender, RoutedEventArgs e)
         {
-            Interlocked.Exchange(ref Auto_Clear_Output_Log_Count, 80);
-            Insert_Log("Output Log will be cleared after " + Auto_Clear_Output_Log_Count + " logs are inserted into it.", 0);
+            Interlocked.Exchange(ref Auto_Clear_Output_Log_Count, 2000);
+            Insert_Log("Output Log will keep the latest " + Auto_Clear_Output_Log_Count + " lines.", 0);
             Auto_Clear_20.IsChecked = false;
             Auto_Clear_40.IsChecked = false;
             Auto_Clear_80.IsChecked = true;
@@ -2384,8 +2384,8 @@ namespace HP_34401A
 
         private void Auto_Clear_100_Click(object sender, RoutedEventArgs e)
         {
-            Interlocked.Exchange(ref Auto_Clear_Output_Log_Count, 100);
-            Insert_Log("Output Log will be cleared after " + Auto_Clear_Output_Log_Count + " logs are inserted into it.", 0);
+            Interlocked.Exchange(ref Auto_Clear_Output_Log_Count, 5000);
+            Insert_Log("Output Log will keep the latest " + Auto_Clear_Output_Log_Count + " lines.", 0);
             Auto_Clear_20.IsChecked = false;
             Auto_Clear_40.IsChecked = false;
             Auto_Clear_80.IsChecked = false;
@@ -4742,17 +4742,8 @@ namespace HP_34401A
         //Inserts a message into the output log control
         private void Insert_Log(string Message, int Code)
         {
-            string date = DateTime.Now.ToString("yyyy-MM-dd h:mm:ss tt");
+            string date = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff");
             SolidColorBrush Color;
-            this.Dispatcher.Invoke(DispatcherPriority.ContextIdle, new ThreadStart(delegate
-            {
-                if (Output_Log.Inlines.Count >= Auto_Clear_Output_Log_Count)
-                {
-                    Output_Log.Text = String.Empty;
-                    Output_Log.Inlines.Clear();
-                    Output_Log.Inlines.Add(new Run("[" + date + "]" + " " + "Output Log has been auto cleared. \n") { Foreground = Brushes.Green });
-                }
-            }));
             string Status = "";
             switch (Code)
             {
@@ -4788,6 +4779,10 @@ namespace HP_34401A
             this.Dispatcher.Invoke(DispatcherPriority.Background, new ThreadStart(delegate
             {
                 Output_Log.Inlines.Add(new Run("[" + date + "]" + " " + Status + " " + Message + "\n") { Foreground = Color });
+                while (Output_Log.Inlines.Count > Auto_Clear_Output_Log_Count)
+                {
+                    Output_Log.Inlines.Remove(Output_Log.Inlines.FirstInline);
+                }
                 if (Auto_Scroll.IsChecked == true)
                 {
                     Output_Log_Scroll.ScrollToBottom();

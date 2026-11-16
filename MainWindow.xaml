@@ -257,10 +257,10 @@
                     <MenuItem x:Name="SaveMeasurements_Interval_10Min" Header="10 Minutes" IsCheckable="True" IsChecked="False" Click="SaveMeasurements_Interval_10Min_Click"/>
                 </MenuItem>
                 <MenuItem x:Name="ClearOutputLog" Header="Clear Output Log" IsCheckable="False" IsChecked="False" Click="ClearOutputLog_Click"/>
-                <MenuItem Header="Auto Clear Output Log" IsCheckable="False" IsChecked="False">
-                    <MenuItem x:Name="Auto_Clear_20" Header="20 Logs" IsCheckable="True" IsChecked="True" Click="Auto_Clear_20_Click"/>
-                    <MenuItem x:Name="Auto_Clear_40" Header="40 Logs" IsCheckable="True" IsChecked="False" Click="Auto_Clear_40_Click"/>
-                    <MenuItem x:Name="Auto_Clear_60" Header="60 Logs" IsCheckable="True" IsChecked="False" Click="Auto_Clear_60_Click"/>
+                <MenuItem Header="Output Log Length" IsCheckable="False" IsChecked="False">
+                    <MenuItem x:Name="Auto_Clear_20" Header="Keep 500 lines" IsCheckable="True" IsChecked="False" Click="Auto_Clear_20_Click"/>
+                    <MenuItem x:Name="Auto_Clear_40" Header="Keep 2000 lines" IsCheckable="True" IsChecked="True" Click="Auto_Clear_40_Click"/>
+                    <MenuItem x:Name="Auto_Clear_60" Header="Keep 5000 lines" IsCheckable="True" IsChecked="False" Click="Auto_Clear_60_Click"/>
                 </MenuItem>
                 <MenuItem x:Name="AutoScroll"  Header="Auto Scroll Output Log" IsCheckable="True" IsChecked="True"/>
             </MenuItem>
