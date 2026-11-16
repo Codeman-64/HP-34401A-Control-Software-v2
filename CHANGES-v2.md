@@ -77,7 +77,6 @@ Run these in this folder (Developer PowerShell in Visual Studio, or Git Bash):
 
 - Command timeouts are always logged (they were hidden unless "Show COM Errors" was ticked),
   and the meter error check now runs even when a command fails, so meter errors appear at once.
-- `*OPC?` waits at most 3 s instead of the full read timeout.
 - Error-queue replies that aren't error codes are logged and skipped instead of ending the check.
 - Fixed (original bug): with an update speed above 1 s, a button press could start a second
   communication cycle while one was running, causing "-410 Query INTERRUPTED" errors.
@@ -87,4 +86,17 @@ Run these in this folder (Developer PowerShell in Visual Studio, or Git Bash):
 ## Updating the git history after stage 3a (once)
 
     git fetch v2-stage3a.bundle main
+    git reset FETCH_HEAD
+
+# Stage 3b fix
+
+- `*OPC?` is no longer used. With Null or dB enabled and no offset/reference given, the meter
+  treats "take the next reading as the offset" as a pending operation, so `*OPC?` never answers
+  until a reading is taken; the app's next query then caused `-410 "Query INTERRUPTED"`.
+  The error-queue check after each command now also serves as the "command processed"
+  confirmation (the meter answers queries strictly in order).
+
+## Updating the git history after stage 3b (once)
+
+    git fetch v2-stage3b.bundle main
     git reset FETCH_HEAD

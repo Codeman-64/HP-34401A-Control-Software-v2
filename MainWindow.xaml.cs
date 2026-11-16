@@ -1337,46 +1337,23 @@ namespace HP_34401A
                 try
                 {
                     Serial_Queue_Command_Process(WriteCommand);
-                    Wait_For_Meter();
                 }
                 catch (TimeoutException)
                 {
-                    //Always report this (not only with "Show COM Errors"): a command was not confirmed.
+                    //Always report this (not only with "Show COM Errors"): a query was not answered.
                     insert_Log("No reply from the meter after: " + WriteCommand + " (timed out after " + HP34401A.ReadTimeout + " ms).", 2);
                     Discard_Late_Reply();
                 }
                 finally
                 {
+                    //The meter handles commands strictly in order, so the reply to SYSTem:ERRor? also confirms
+                    //the command has been processed. (*OPC? is not used: it waits for pending measurements,
+                    //e.g. after enabling NULL/dB the meter waits for the next reading, and then never answers.)
                     if (WriteCommand != "SYSTem:ERRor?" && HP34401A != null && HP34401A.IsOpen)
                     {
                         Check_Meter_Errors();
                     }
                 }
-            }
-        }
-
-        //Waits until the meter has finished every command sent so far, instead of a fixed delay.
-        //*OPC? is answered with "1" once all previous commands are complete. Any other line read
-        //here is a leftover reply (e.g. from a query) and is skipped.
-        private void Wait_For_Meter()
-        {
-            //Setting commands finish quickly; don't wait the full read timeout if the reply never comes.
-            int oldTimeout = HP34401A.ReadTimeout;
-            HP34401A.ReadTimeout = Math.Min(oldTimeout, 3000);
-            try
-            {
-                Meter_Write("*OPC?");
-                for (int i = 0; i < 4; i++)
-                {
-                    if (Meter_ReadLine().Trim() == "1")
-                    {
-                        return;
-                    }
-                }
-            }
-            finally
-            {
-                HP34401A.ReadTimeout = oldTimeout;
             }
         }
 

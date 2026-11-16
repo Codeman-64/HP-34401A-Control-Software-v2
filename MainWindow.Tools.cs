@@ -271,7 +271,7 @@ namespace HP_34401A
 
                 Meter_Write("TRIGger:SOURce IMMediate");
                 Meter_Write("SAMPle:COUNt " + count);
-                Wait_For_Meter();
+                Check_Meter_Errors(); //also confirms both settings were processed
 
                 //FETCh? waits until all readings are taken. Allow plenty of time for slow NPLC settings.
                 HP34401A.ReadTimeout = 20 * 60 * 1000;
