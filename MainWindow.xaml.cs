@@ -1360,6 +1360,16 @@ namespace HP_34401A
         private void Serial_Queue_Command_Process(string Command)
         {
             HP34401A.DiscardInBuffer();
+            if (Command == "MATH ON")
+            {
+                //After CALCulate:STATe ON the meter answers no queries until it has taken a reading
+                //(NULL and dB use that first reading as their reference). Take it straight away.
+                Meter_Write("CALCulate:STATe ON");
+                Meter_Write("READ?");
+                string first = Meter_ReadLine().Trim();
+                insert_Log("Meter math enabled; first reading " + first + " taken as reference where needed.", 3);
+                return;
+            }
             if (Command.StartsWith("BURST ", StringComparison.Ordinal))
             {
                 Run_Burst(int.Parse(Command.Substring(6), CultureInfo.InvariantCulture));

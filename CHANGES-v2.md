@@ -100,3 +100,14 @@ Run these in this folder (Developer PowerShell in Visual Studio, or Git Bash):
 
     git fetch v2-stage3b.bundle main
     git reset FETCH_HEAD
+
+# Stage 3c fix
+
+- After `CALC:STAT ON` the meter answers no queries until it has taken a reading (Null and dB
+  use that first reading as their reference). Turning math on now sends `CALC:STAT ON` followed
+  immediately by `READ?`, then any offset/reference/limits, so the error check no longer waits 9 s.
+
+## Updating the git history after stage 3c (once)
+
+    git fetch v2-stage3c.bundle main
+    git reset FETCH_HEAD

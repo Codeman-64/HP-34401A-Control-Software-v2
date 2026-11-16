@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Windows;
@@ -79,7 +79,7 @@ namespace HP_34401A
                     }
                     mode = Meter_Math.Null;
                     commands.Add("CALCulate:FUNCtion NULL");
-                    commands.Add("CALCulate:STATe ON");
+                    commands.Add("MATH ON"); //enables math and takes the first reading
                     if (offset.HasValue)
                     {
                         commands.Add("CALCulate:NULL:OFFSet " + Num(offset.Value));
@@ -107,7 +107,7 @@ namespace HP_34401A
                         }
                         mode = Meter_Math.dB;
                         commands.Add("CALCulate:FUNCtion DB");
-                        commands.Add("CALCulate:STATe ON");
+                        commands.Add("MATH ON"); //enables math and takes the first reading
                         if (reference.HasValue)
                         {
                             commands.Add("CALCulate:DB:REFerence " + Num(reference.Value));
@@ -119,7 +119,7 @@ namespace HP_34401A
                         string ohms = (DBM_Ref.SelectedItem as ComboBoxItem)?.Content?.ToString() ?? "600";
                         mode = Meter_Math.dBm;
                         commands.Add("CALCulate:FUNCtion DBM");
-                        commands.Add("CALCulate:STATe ON");
+                        commands.Add("MATH ON"); //enables math and takes the first reading
                         commands.Add("CALCulate:DBM:REFerence " + ohms);
                         status = "Math: dBm (" + ohms + " Ω)";
                     }
@@ -139,7 +139,7 @@ namespace HP_34401A
                     }
                     mode = Meter_Math.Limit;
                     commands.Add("CALCulate:FUNCtion LIMit");
-                    commands.Add("CALCulate:STATe ON");
+                    commands.Add("MATH ON"); //enables math and takes the first reading
                     commands.Add("CALCulate:LIMit:LOWer " + Num(low));
                     commands.Add("CALCulate:LIMit:UPPer " + Num(high));
                     status = "Math: Limit " + Num(low) + " to " + Num(high) + " " + Main.Current_Unit;
