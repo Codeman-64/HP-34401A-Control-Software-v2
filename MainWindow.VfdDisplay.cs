@@ -17,7 +17,8 @@ namespace HP_34401A
     /// </summary>
     public partial class MainWindow
     {
-        private const string Font_Standard = "Standard", Font_VFD = "VFD", Font_VFD_Bold = "VFD Bold";
+        //VFD = thin (Light) segments like the meter's display; Regular and Bold are heavier alternatives.
+        private const string Font_Standard = "Standard", Font_VFD = "VFD", Font_VFD_Regular = "VFD Regular", Font_VFD_Bold = "VFD Bold";
         private const string VFD_Colour = "#FF3DF5D0";      //blue-green of a vacuum fluorescent display
         private const string Default_Colour = "#FF00C0FF";  //the app's original display colour
         private const double Ghost_Opacity = 0.10;          //brightness of the unlit segments
@@ -40,9 +41,9 @@ namespace HP_34401A
 
         //The segment font has no space above its characters (the standard font has about a quarter of its
         //size), so in VFD mode the readouts are moved to sit where the standard text sat.
-        private const double VFD_Main_Size = 64, VFD_Small_Size = 15;
+        private const double VFD_Main_Size = 64, VFD_Small_Size = 13;  //13 = same height as the MIN:/MAX:/AVG: capitals
         private const double VFD_Main_Top = 6;    //centres the 64 px reading in the 75 px top row
-        private const double VFD_Small_Top = 4;   //lines the MIN/MAX/AVG values up with the MIN:/MAX:/AVG: labels
+        private const double VFD_Small_Top = 6;   //puts the MIN/MAX/AVG values on the same baseline as their labels
         private Viewbox Main_Readout_Box;
         private Thickness Main_Box_Standard_Margin;
         private double Main_Box_Standard_Height;
@@ -184,14 +185,14 @@ namespace HP_34401A
         {
             bool wasOn = VFD_On;
             Display_Font = font;
-            bool bold = font == Font_VFD_Bold;
+            FontWeight weight = font == Font_VFD_Bold ? FontWeights.Bold : font == Font_VFD_Regular ? FontWeights.Normal : FontWeights.Light;
 
             foreach (Readout_Part part in Readout_Parts)
             {
                 if (VFD_On)
                 {
                     part.Label.FontFamily = VFD_Font;
-                    part.Label.FontWeight = bold ? FontWeights.Bold : FontWeights.Normal;
+                    part.Label.FontWeight = weight;
                     part.Label.FontSize = part.IsMain ? VFD_Main_Size : VFD_Small_Size;
                     part.Ghost.FontFamily = VFD_Font;
                     part.Ghost.FontWeight = part.Label.FontWeight;
@@ -200,10 +201,11 @@ namespace HP_34401A
                     part.Ghost.Visibility = Visibility.Visible;
                     Color colour = (part.Label.Foreground as SolidColorBrush)?.Color ?? Colors.Cyan;
                     part.Label.Effect = new DropShadowEffect { ShadowDepth = 0, BlurRadius = part.IsMain ? 14 : 6, Opacity = 0.7, Color = colour };
+                    Grid vfdCell = (Grid)part.Label.Parent;
                     if (!part.IsMain)
                     {
                         Thickness m = part.StandardMargin;
-                        ((Grid)part.Label.Parent).Margin = new Thickness(m.Left, m.Top + VFD_Small_Top, m.Right, m.Bottom);
+                        vfdCell.Margin = new Thickness(m.Left, m.Top + VFD_Small_Top, m.Right, m.Bottom);
                     }
                 }
                 else
@@ -242,6 +244,7 @@ namespace HP_34401A
 
             DisplayFont_Standard.IsChecked = font == Font_Standard;
             DisplayFont_VFD.IsChecked = font == Font_VFD;
+            DisplayFont_VFD_Regular.IsChecked = font == Font_VFD_Regular;
             DisplayFont_VFD_Bold.IsChecked = font == Font_VFD_Bold;
 
             if (save)
@@ -287,6 +290,11 @@ namespace HP_34401A
         private void DisplayFont_VFD_Click(object sender, RoutedEventArgs e)
         {
             Set_Display_Font(Font_VFD, true);
+        }
+
+        private void DisplayFont_VFD_Regular_Click(object sender, RoutedEventArgs e)
+        {
+            Set_Display_Font(Font_VFD_Regular, true);
         }
 
         private void DisplayFont_VFD_Bold_Click(object sender, RoutedEventArgs e)

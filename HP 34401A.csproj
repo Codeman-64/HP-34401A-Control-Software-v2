@@ -34,6 +34,7 @@
   <ItemGroup>
     <Resource Include="34401A_Logo.ico" />
     <!-- 14-segment VFD display font (modified DSEG14 Classic, SIL Open Font License 1.1) -->
+    <Resource Include="Fonts\HP34401A-VFD-Light.ttf" />
     <Resource Include="Fonts\HP34401A-VFD-Regular.ttf" />
     <Resource Include="Fonts\HP34401A-VFD-Bold.ttf" />
     <None Include="Fonts\OFL-LICENSE.txt" CopyToOutputDirectory="PreserveNewest" />

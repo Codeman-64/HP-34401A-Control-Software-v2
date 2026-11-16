@@ -1,8 +1,8 @@
 HP34401A VFD font
 =================
 
-The files HP34401A-VFD-Regular.ttf and HP34401A-VFD-Bold.ttf are a Modified Version of
-DSEG14 Classic v0.46 (Regular and Bold) by keshikan (https://www.keshikan.net/fonts-e.html).
+The files HP34401A-VFD-Light.ttf, HP34401A-VFD-Regular.ttf and HP34401A-VFD-Bold.ttf are a
+Modified Version of DSEG14 Classic v0.46 (Light, Regular and Bold) by keshikan (https://www.keshikan.net/fonts-e.html).
 
 Changes: lowercase "m" and "u" redrawn as half-height 14-segment forms (as on the HP 34401A
 display), and the micro sign (U+00B5, U+03BC) mapped to the new "u". As required by the

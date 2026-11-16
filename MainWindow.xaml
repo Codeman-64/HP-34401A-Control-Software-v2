@@ -241,6 +241,7 @@
                 <MenuItem Header="Display Font">
                     <MenuItem x:Name="DisplayFont_Standard" Header="Standard" IsCheckable="True" IsChecked="True" Click="DisplayFont_Standard_Click"/>
                     <MenuItem x:Name="DisplayFont_VFD" Header="VFD (14-segment, like the meter)" IsCheckable="True" Click="DisplayFont_VFD_Click"/>
+                    <MenuItem x:Name="DisplayFont_VFD_Regular" Header="VFD Regular (thicker segments)" IsCheckable="True" Click="DisplayFont_VFD_Regular_Click"/>
                     <MenuItem x:Name="DisplayFont_VFD_Bold" Header="VFD Bold" IsCheckable="True" Click="DisplayFont_VFD_Bold_Click"/>
                 </MenuItem>
                 <MenuItem Header="Window Size">
