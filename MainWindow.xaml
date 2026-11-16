@@ -238,6 +238,11 @@
                         <MenuItem x:Name="Factor_1000" Header="1000" IsCheckable="True" IsChecked="True" Click="Factor_1000_Click"/>
                     </MenuItem>
                 </MenuItem>
+                <MenuItem Header="Display Font">
+                    <MenuItem x:Name="DisplayFont_Standard" Header="Standard" IsCheckable="True" IsChecked="True" Click="DisplayFont_Standard_Click"/>
+                    <MenuItem x:Name="DisplayFont_VFD" Header="VFD (14-segment, like the meter)" IsCheckable="True" Click="DisplayFont_VFD_Click"/>
+                    <MenuItem x:Name="DisplayFont_VFD_Bold" Header="VFD Bold" IsCheckable="True" Click="DisplayFont_VFD_Bold_Click"/>
+                </MenuItem>
                 <MenuItem Header="Window Size">
                     <MenuItem x:Name="Size_800x800" Header="800 × 800" IsCheckable="True" Click="Size_800x800_Click"/>
                     <MenuItem x:Name="Size_600x800" Header="600 × 800 (narrow)" IsCheckable="True" Click="Size_600x800_Click"/>

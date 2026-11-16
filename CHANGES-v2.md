@@ -167,3 +167,18 @@ Run these in this folder (Developer PowerShell in Visual Studio, or Git Bash):
 
     git fetch v2-size.bundle main
     git reset FETCH_HEAD
+
+# VFD display font
+
+- Display Panel -> Display Font: Standard, VFD, or VFD Bold. VFD shows the reading and
+  MIN/MAX/AVG in a 14-segment font like the 34401A's vacuum fluorescent display: dim "unlit"
+  segments behind each character, a soft glow, a blue-green colour (only if the display still
+  had its default colour) and units spelled the way the meter does (OHM, kOHM, MOHM; u for micro).
+  The choice is remembered.
+- Font: "HP34401A VFD" (Fonts folder), a modified DSEG14 Classic v0.46 by keshikan with
+  half-height lowercase m and u. SIL Open Font License 1.1; see Fonts\OFL-LICENSE.txt.
+
+## Updating the git history (once)
+
+    git fetch v2-vfd.bundle main
+    git reset FETCH_HEAD

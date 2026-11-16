@@ -434,6 +434,7 @@ namespace HP_34401A
             public double UpdateSpeed { get; set; } = 1000;
             public double WindowWidth { get; set; } = 0;  //0 = use the default size
             public double WindowHeight { get; set; } = 0;
+            public string DisplayFont { get; set; } = "Standard";
         }
 
         private static readonly string Session_File = System.IO.Path.Combine(

@@ -186,6 +186,7 @@ namespace HP_34401A
             Continuous_Voice_Measurement();
             Save_measurements_to_files_Timer();
             Setup_Session_Tracking();
+            Setup_VFD_Display();
             insert_Log("Click the Config Menu then click Connect.", 5);
             insert_Log("USB to Serial Adapter and a Null Modem Cable/Adapter are required.", 5);
             insert_Log("This software only works with HP Agilent Keysight 34401A", 5);
