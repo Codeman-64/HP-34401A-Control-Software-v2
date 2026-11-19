@@ -5,4 +5,5 @@ packages/
 *.user
 *.bundle
 *.bak
-Properties/PublishProfiles/
+Properties/PublishProfiles/*
+!Properties/PublishProfiles/Release-win-x64.pubxml

@@ -64,7 +64,8 @@ namespace HP_34401A
         {
             try
             {
-                folder_Directory = System.IO.Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) + @"\" + "Log Data (HP34401A)";
+                //AppContext.BaseDirectory = the program's folder (Assembly.Location is empty in a single-file build)
+                folder_Directory = System.IO.Path.Combine(AppContext.BaseDirectory, "Log Data (HP34401A)");
                 insert_Log("Test Data will be saved inside the software directory.", Config_Code);
                 insert_Log(folder_Directory, Config_Code);
                 insert_Log("Click the Select button to select another directory.", Config_Code);
