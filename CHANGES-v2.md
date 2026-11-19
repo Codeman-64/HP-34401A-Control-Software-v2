@@ -21,16 +21,6 @@
    overload/open readings are counted as invalid instead of vanishing.
 8. All threads parse numbers with en-US culture.
 
-## Setting up the git history (once)
-Run these in this folder (Developer PowerShell in Visual Studio, or Git Bash):
-
-    git init -b main
-    git fetch v2-history.bundle main
-    git reset FETCH_HEAD
-
-`git log` then shows the baseline (your original code) plus one commit per group of changes.
-`git diff HEAD~3` shows everything changed in stage 1. You can delete the bundle file afterwards.
-
 # Stage 2 changes
 
 - **Faster commands:** the fixed 1.2 s pause after every command and the 0.1 s pause before every
@@ -42,11 +32,6 @@ Run these in this folder (Developer PowerShell in Visual Studio, or Git Bash):
 - **Output log:** keeps the latest lines and trims the oldest, instead of wiping everything.
   Main window: 500 / 2000 (default) / 5000 lines. Graph and Math windows: 250 / 1000 (default) /
   2000 / 5000. Menu renamed "Output Log Length".
-
-## Updating the git history after stage 2 (once)
-
-    git fetch v2-stage2.bundle main
-    git reset FETCH_HEAD
 
 # Stage 3 changes
 
@@ -68,11 +53,6 @@ Run these in this folder (Developer PowerShell in Visual Studio, or Git Bash):
   AC bandwidth, gate time and update speed are saved to `%LocalAppData%\HP 34401A\Session.json`
   and re-applied after connecting. Turn off with Config -> Restore Last Settings on Connect.
 
-## Updating the git history after stage 3 (once)
-
-    git fetch v2-stage3.bundle main
-    git reset FETCH_HEAD
-
 # Stage 3a fixes
 
 - Command timeouts are always logged (they were hidden unless "Show COM Errors" was ticked),
@@ -83,11 +63,6 @@ Run these in this folder (Developer PowerShell in Visual Studio, or Git Bash):
 - New option Display Panel -> Log Serial Traffic (diagnostics): logs every command sent (>>)
   and reply (<<) with timings.
 
-## Updating the git history after stage 3a (once)
-
-    git fetch v2-stage3a.bundle main
-    git reset FETCH_HEAD
-
 # Stage 3b fix
 
 - `*OPC?` is no longer used. With Null or dB enabled and no offset/reference given, the meter
@@ -96,21 +71,11 @@ Run these in this folder (Developer PowerShell in Visual Studio, or Git Bash):
   The error-queue check after each command now also serves as the "command processed"
   confirmation (the meter answers queries strictly in order).
 
-## Updating the git history after stage 3b (once)
-
-    git fetch v2-stage3b.bundle main
-    git reset FETCH_HEAD
-
 # Stage 3c fix
 
 - After `CALC:STAT ON` the meter answers no queries until it has taken a reading (Null and dB
   use that first reading as their reference). Turning math on now sends `CALC:STAT ON` followed
   immediately by `READ?`, then any offset/reference/limits, so the error check no longer waits 9 s.
-
-## Updating the git history after stage 3c (once)
-
-    git fetch v2-stage3c.bundle main
-    git reset FETCH_HEAD
 
 # Stage 3d fix
 
@@ -120,11 +85,6 @@ Run these in this folder (Developer PowerShell in Visual Studio, or Git Bash):
   those commands. (The original code avoided this only by pausing 1.2 s after every command.)
 - If the cable carries the meter's DTR line (PC DSR), the app also waits for it before sending.
   The traffic log shows `DSR=0/1` for each command.
-
-## Updating the git history after stage 3d (once)
-
-    git fetch v2-stage3d.bundle main
-    git reset FETCH_HEAD
 
 # Stage 3e fix
 
@@ -137,22 +97,12 @@ Run these in this folder (Developer PowerShell in Visual Studio, or Git Bash):
 - Traffic log shows how often DSR was low during each wait (tells whether the cable carries the
   meter's busy line).
 
-## Updating the git history after stage 3e (once)
-
-    git fetch v2-stage3e.bundle main
-    git reset FETCH_HEAD
-
 # Version 2.0 credits
 
 - About -> Credits now shows version 2.0, the original author (Nirav Patel), the version 2
   updates by T. Carter with Claude, the main changes, and the supported Windows versions
   (64-bit Windows 10 22H2 and Windows 11). About -> Device Support lists the Windows requirement.
 - Program version set to 2.0.0.0 (exe Properties -> Details).
-
-## Updating the git history (once)
-
-    git fetch v2-credits.bundle main
-    git reset FETCH_HEAD
 
 # Window size and display margin
 
@@ -162,11 +112,6 @@ Run these in this folder (Developer PowerShell in Visual Studio, or Git Bash):
 - The black display panel now has an 8 px margin on both sides, so the reading and MIN/AVG no
   longer touch the window edges. A reading too wide for the window shrinks to fit instead of
   being cut off.
-
-## Updating the git history (once)
-
-    git fetch v2-size.bundle main
-    git reset FETCH_HEAD
 
 # VFD display font
 
@@ -179,10 +124,3 @@ Run these in this folder (Developer PowerShell in Visual Studio, or Git Bash):
   half-height lowercase m and u, in Light, Regular and Bold. MIN/MAX/AVG use 13 px segment text
   so they match the height of their labels. Characters are narrowed to 85 % of their width
   (VFD_Char_Width in MainWindow.VfdDisplay.cs), with a 5 px gap after MIN:/MAX:/AVG:. SIL Open Font License 1.1; see Fonts\OFL-LICENSE.txt.
-
-## Updating the git history (once)
-
-    git fetch v2-all.bundle main
-    git reset FETCH_HEAD
-
-  (v2-all.bundle holds the complete history, so it works whichever bundles were applied before.)

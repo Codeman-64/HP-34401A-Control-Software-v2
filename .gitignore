@@ -3,3 +3,6 @@ obj/
 .vs/
 packages/
 *.user
+*.bundle
+*.bak
+Properties/PublishProfiles/
