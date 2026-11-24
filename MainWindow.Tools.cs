@@ -30,30 +30,40 @@ namespace HP_34401A
         //Reads SYSTem:ERRor? until the queue is empty and logs every error. Runs on the data thread.
         private void Check_Meter_Errors()
         {
-            try
+            for (int attempt = 0; attempt < 2; attempt++)
             {
-                for (int i = 0; i < 20; i++)
+                try
                 {
-                    Meter_Write("SYSTem:ERRor?");
-                    string reply = Meter_ReadLine().Trim();
-                    string codeText = reply.Split(',')[0].Trim();
-                    if (!int.TryParse(codeText, NumberStyles.Integer, CultureInfo.InvariantCulture, out int code))
-                    {
-                        //Not an error-queue reply: a leftover from an earlier query. Skip it and ask again.
-                        insert_Log("Unexpected reply while reading meter errors: " + reply, 2);
-                        continue;
-                    }
-                    if (code == 0)
-                    {
-                        return;
-                    }
-                    insert_Log("Meter error " + reply, 1);
+                    Read_Error_Queue();
+                    return;
+                }
+                catch (TimeoutException)
+                {
+                    insert_Log("No reply from the meter to SYSTem:ERRor? (timed out)." + (attempt == 0 ? " Trying again." : ""), 2);
+                    Discard_Late_Reply();
+                    //Try once more: errors left in the queue keep the meter's ERROR annunciator lit
                 }
             }
-            catch (TimeoutException)
+        }
+
+        private void Read_Error_Queue()
+        {
+            for (int i = 0; i < 20; i++)
             {
-                insert_Log("No reply from the meter to SYSTem:ERRor? (timed out).", 2);
-                Discard_Late_Reply();
+                Meter_Write("SYSTem:ERRor?");
+                string reply = Meter_ReadLine().Trim();
+                string codeText = reply.Split(',')[0].Trim();
+                if (!int.TryParse(codeText, NumberStyles.Integer, CultureInfo.InvariantCulture, out int code))
+                {
+                    //Not an error-queue reply: a leftover from an earlier query. Skip it and ask again.
+                    insert_Log("Unexpected reply while reading meter errors: " + reply, 2);
+                    continue;
+                }
+                if (code == 0)
+                {
+                    return;
+                }
+                insert_Log("Meter error " + reply, 1);
             }
         }
 

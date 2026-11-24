@@ -1335,6 +1335,10 @@ namespace HP_34401A
             }
         }
 
+        //Pauses (ms) before querying the meter after a function change / any other settings command
+        const int Config_Settle_Ms = 250;
+        const int Setting_Settle_Ms = 50;
+
         private void Serial_WriteQueue()
         {
             while (SerialWriteQueue.Count != 0)
@@ -1357,6 +1361,11 @@ namespace HP_34401A
                     //e.g. after enabling NULL/dB the meter waits for the next reading, and then never answers.)
                     if (WriteCommand != "SYSTem:ERRor?" && HP34401A != null && HP34401A.IsOpen)
                     {
+                        if (!WriteCommand.Contains('?'))
+                        {
+                            //Settings commands: give the meter a moment to apply them before the next query
+                            Thread.Sleep(Setting_Settle_Ms);
+                        }
                         Check_Meter_Errors();
                     }
                 }
@@ -1399,6 +1408,9 @@ namespace HP_34401A
                     Math_Off_By_Function_Change();
                     Meter_Write(Command);
                     Meter_Math_On = false; //CONFigure turns the meter's math off
+                    //The meter switches relays and reconfigures after CONFigure and ignores serial input
+                    //meanwhile; its ready line (DSR) drops only a few ms later, so a query sent at once is lost.
+                    Thread.Sleep(Config_Settle_Ms);
                     break;
                 case "TRIGger:DELay?":
                     Meter_Write(Command);
